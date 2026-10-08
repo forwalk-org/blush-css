@@ -1,0 +1,149 @@
+/**
+ * UTILITIES / media
+ *
+ * Place content over media (an image, a video, a graphic) with two classes.
+ * The content layer is positioned over the media and aligned with flexbox.
+ *
+ *   .cover      stretches an element to fill its parent
+ *               (`object-fit: cover`, behind the overlay)
+ *   .overlay    a content layer that fills the parent and aligns its content
+ *   .overlay-*  the position of that content (9-point grid, plus `full`)
+ *
+ * The direct parent of an `.overlay` is detected with `:has()`. It becomes a
+ * clipped, relatively positioned grid (`overflow: hidden`, own stacking
+ * context), so no wrapper class is required.
+ *
+ * Stacking: `.cover` sits at z-index 10 and ignores pointer events;
+ * `.overlay` sits at 100.
+ *
+ * Positions (default: bottom-left)
+ *   .overlay-top-left     .overlay-top      .overlay-top-right
+ *   .overlay-center-left  .overlay-center   .overlay-center-right
+ *   .overlay-bottom-left  .overlay-bottom   .overlay-bottom-right
+ *   .overlay-full         content spread from top to bottom
+ *
+ * Dials (all optional)
+ *   --overlay-color     background of the overlay: any gradient or color
+ *                       (default: a surface-colored scrim, 60% to 80%)
+ *   --overlay-padding   padding of the overlay (default 6 x --spacing = 1.5rem)
+ *
+ * Usage
+ *   <article class="rounded-xl">
+ *     <img class="cover" src="mountain.jpg" alt="Dolomites">
+ *     <div class="overlay overlay-bottom-left">
+ *       <h3>Tre Cime di Lavaredo</h3>
+ *       <p>10 km loop</p>
+ *     </div>
+ *   </article>
+ *
+ *   <div style="--overlay-color: linear-gradient(180deg, transparent, rgb(0 0 0 / .8))">
+ *     <video class="cover" src="hero.mp4" autoplay loop muted></video>
+ *     <div class="overlay overlay-center">
+ *       <h2>Explore the outdoors</h2>
+ *     </div>
+ *   </div>
+ *
+ * Reads:  --color-surface, --spacing
+ * Layer:  utilities
+ */
+@layer utilities {
+  /* The direct parent of an overlay: clipped grid, positioning context. */
+  :has(> .overlay) {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    overflow: hidden;
+  }
+
+  /* Background media. */
+  .cover {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: cover;
+    object-position: center;
+    pointer-events: none;
+  }
+
+  /* The content layer fills the parent; flexbox aligns what is inside. */
+  .overlay {
+    position: absolute;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+    padding: var(--overlay-padding, calc(var(--spacing) * 6));
+
+    background: var(
+      --overlay-color,
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--color-surface) 60%, transparent) 0%,
+        color-mix(in oklab, var(--color-surface) 80%, transparent) 100%
+      )
+    );
+  }
+
+  /* Position modifiers. They follow .overlay, so they win at equal specificity. */
+  .overlay-top-left {
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .overlay-top {
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+  }
+  .overlay-top-right {
+    justify-content: flex-start;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .overlay-center-left {
+    justify-content: center;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .overlay-center {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .overlay-center-right {
+    justify-content: center;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .overlay-bottom-left {
+    justify-content: flex-end;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .overlay-bottom {
+    justify-content: flex-end;
+    align-items: center;
+    text-align: center;
+  }
+  .overlay-bottom-right {
+    justify-content: flex-end;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  /* Content distributed along the full height. */
+  .overlay-full {
+    justify-content: space-between;
+    align-items: stretch;
+  }
+}

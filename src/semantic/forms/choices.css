@@ -1,0 +1,96 @@
+/**
+ * SEMANTIC / forms / choices
+ *
+ * Checkbox, radio and switch. A switch is a checkbox with a role:
+ *   <input type="checkbox" role="switch">
+ *
+ * The check and indeterminate marks are SVG masks painted with
+ * `--color-choice-check`. A data-URI cannot use `var()`, so the color lives
+ * on the `::before` pseudo-element and the SVG only provides the shape.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   :checked | :indeterminate   accent fill and mark (switch: the knob slides)
+ *   disabled                    dimmed, not interactive
+ *
+ * Reads:  --color-accent/surface/border, --color-choice-border-hover,
+ *         --color-choice-check, --color-focus-ring (see derived.css)
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Checkbox and radio: shared box
+       ------------------------------------------------------------- */
+    input[type="checkbox"],
+    input[type="radio"] {
+        @apply relative inline-block shrink-0 align-middle appearance-none cursor-pointer
+            w-[1.25em] h-[1.25em] m-0 p-0
+            border border-[color:var(--color-border)] bg-[color:var(--color-surface)]
+            bg-center bg-no-repeat bg-[size:0.75em_auto]
+            transition-all duration-150
+            hover:border-[color:var(--color-choice-border-hover)]
+            focus-visible:outline-none focus-visible:border-[color:var(--color-accent)]
+            focus-visible:ring-3 focus-visible:ring-[color:var(--color-focus-ring)]
+            disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    /* -------------------------------------------------------------
+       2. Checkbox
+       ------------------------------------------------------------- */
+    input[type="checkbox"]:not([role="switch"]) {
+        @apply rounded;
+    }
+
+    input[type="checkbox"]:not([role="switch"]):checked {
+        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)];
+        --choice-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3.75 9 6.5 11.75 12.25 4.75'/%3E%3C/svg%3E");
+    }
+
+    input[type="checkbox"]:not([role="switch"]):indeterminate {
+        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)];
+        --choice-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='4' y1='8' x2='12' y2='8'/%3E%3C/svg%3E");
+    }
+
+    input[type="checkbox"]:not([role="switch"]):is(:checked, :indeterminate)::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-color: var(--color-choice-check);
+        -webkit-mask: var(--choice-mark) center / 0.75em auto no-repeat;
+        mask: var(--choice-mark) center / 0.75em auto no-repeat;
+    }
+
+    /* -------------------------------------------------------------
+       3. Radio
+       ------------------------------------------------------------- */
+    input[type="radio"] {
+        @apply rounded-full;
+    }
+
+    input[type="radio"]:checked {
+        @apply bg-[color:var(--color-surface)] border-[color:var(--color-accent)] border-[0.35em];
+    }
+
+    /* -------------------------------------------------------------
+       4. Switch: input[type="checkbox"][role="switch"]
+       ------------------------------------------------------------- */
+    input[type="checkbox"][role="switch"] {
+        @apply w-[2.25em] h-[1.25em] p-0 rounded-full border-[color:var(--color-border)] bg-[color:var(--color-border)];
+    }
+
+    /* The knob. */
+    input[type="checkbox"][role="switch"]::before {
+        content: "";
+        @apply block h-full aspect-square rounded-full bg-[color:var(--color-surface)] shadow-sm transition-[margin] duration-150;
+    }
+
+    input[type="checkbox"][role="switch"]:checked {
+        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)] bg-none;
+    }
+
+    /* Checked: the knob slides to the end of the track. */
+    input[type="checkbox"][role="switch"]:checked::before {
+        margin-inline-start: calc(2.25em - 1.25em);
+    }
+}

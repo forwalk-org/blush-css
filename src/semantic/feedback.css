@@ -1,0 +1,114 @@
+/**
+ * SEMANTIC / feedback
+ *
+ * Visual feedback driven by accessible states. The state is what the
+ * assistive technology reads; here it is also what styles the element, so no
+ * class is involved.
+ *
+ *   aria-disabled="true"            dimmed, inert (elements buttons.css and
+ *                                   forms/fields.css do not already cover)
+ *   aria-expanded="true"            the trailing icon of a button turns upside down
+ *   aria-selected="true" |          highlighted tab, option, menu item, list
+ *   aria-current                    item or row (buttons keep their own ring)
+ *   role="alert" | "status"         notice box, colored by the current tone
+ *
+ * Variable contract
+ * -----------------
+ *   --feedback-tone   color of a notice. Defaults to `--tone`, then to the
+ *                     invalid color for role="alert" and the accent for
+ *                     role="status". `.positive`, `.warning` and `.negative`
+ *                     (utilities/tone.css) change it without knowing this file.
+ *
+ * Usage
+ *   <p role="alert">The payment failed.</p>
+ *   <p role="status" class="positive">Saved.</p>
+ *   <button aria-expanded="true">Options <svg>...</svg></button>
+ *
+ * Deliberately not here
+ *   - `disabled`, and `aria-disabled` on buttons and fields: buttons.css and
+ *     forms/fields.css.
+ *   - `[hidden]`: Tailwind's preflight already sets `display: none !important`,
+ *     and Blush does not use `!important`.
+ *   - `[aria-hidden="true"]`: it only removes an element from the accessibility
+ *     tree. Decorative icons are often visible, so hiding them would break the page.
+ *   - `[aria-live]` alone: a live region announces, it does not need a box. Only
+ *     `role="alert"` and `role="status"` get one.
+ *
+ * Reads:  --color-text/accent/invalid/surface/heading, --radius-control
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Disabled: items outside buttons and fields
+       ------------------------------------------------------------- */
+    :is(a, summary, [role="tab"], [role="menuitem"], [role="option"]):not(button, [role="button"])[aria-disabled="true"] {
+        @apply opacity-50 pointer-events-none cursor-not-allowed;
+    }
+
+    /* -------------------------------------------------------------
+       2. Expanded: the trailing icon turns upside down
+          Only an icon that follows other content, so an icon-only button
+          does not spin.
+       ------------------------------------------------------------- */
+    :is(button, [role="button"], a)[aria-expanded] > svg:last-child:not(:first-child) {
+        transition: transform 150ms ease;
+    }
+
+    :is(button, [role="button"], a)[aria-expanded="true"] > svg:last-child:not(:first-child) {
+        transform: rotate(180deg);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        :is(button, [role="button"], a)[aria-expanded] > svg:last-child:not(:first-child) {
+            transition: none;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       3. Selected and current: tabs, options, menu items, list items, rows
+       ------------------------------------------------------------- */
+    :is([role="tab"], [role="option"], [role="menuitem"], [role="treeitem"], li, tr):not(button, [role="button"]):is(
+        [aria-selected="true"],
+        [aria-current]:not([aria-current="false"])
+    ) {
+        color: var(--color-heading);
+        background-color: color-mix(in oklab, var(--color-accent) 12%, transparent);
+    }
+
+    /* -------------------------------------------------------------
+       4. Notices: role="alert" and role="status"
+       ------------------------------------------------------------- */
+    [role="status"] {
+        --feedback-tone: var(--tone, var(--color-accent));
+    }
+
+    [role="alert"] {
+        --feedback-tone: var(--tone, var(--color-invalid));
+    }
+
+    :is([role="alert"], [role="status"]) {
+        @apply mb-4 px-4 py-3;
+        color: var(--color-text);
+        background-color: color-mix(in oklab, var(--feedback-tone) 8%, var(--color-surface));
+        border: 1px solid color-mix(in oklab, var(--feedback-tone) 35%, var(--color-surface));
+        border-inline-start: 4px solid var(--feedback-tone);
+        border-radius: var(--radius-control);
+    }
+
+    :is([role="alert"], [role="status"]) > :first-child {
+        margin-block-start: 0;
+    }
+
+    :is([role="alert"], [role="status"]) > :last-child {
+        margin-block-end: 0;
+    }
+
+    /* A live region is often in the page before it has anything to say: it
+       must stay in the accessibility tree, so it is emptied visually, not hidden. */
+    :is([role="alert"], [role="status"]):empty {
+        @apply m-0 p-0;
+        background: none;
+        border: 0;
+    }
+}

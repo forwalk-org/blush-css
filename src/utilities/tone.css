@@ -1,0 +1,133 @@
+/**
+ * UTILITIES / tone
+ *
+ * Opt-in classes that give an element a semantic color. They only assign
+ * custom properties, so they carry no knowledge of any component: a component
+ * decides what to do with the tone it receives.
+ *
+ *   .positive   success / confirm     (--color-valid)
+ *   .negative   danger / destructive  (--color-invalid)
+ *   .warning    caution               (--color-warning)
+ *   .muted      neutral surface, for secondary actions
+ *   .accent     filled in the current tone: the opposite of .muted
+ *
+ * The tone lives in `--tone`. buttons.css reads it today; any module can read
+ * it tomorrow (`var(--tone, var(--color-accent))`).
+ *
+ *   <button class="positive">Confirm</button>
+ *   <button class="outlined negative">Delete</button>
+ *   <a href="/save" role="button" class="warning">Review</a>
+ *
+ * `--tone` is registered as NON-inheriting. A tone applies to the element that
+ * carries the class, never to its descendants: `<form class="negative">` does
+ * not turn every button inside it red.
+ *
+ * Text color
+ * ----------
+ * The same classes also color the text of any element that is not a button:
+ *   .positive .negative .warning   the tone (--tone)
+ *   .accent                        the current tone, or the accent
+ *   .muted                         --color-muted (secondary text)
+ *
+ *   <p class="positive">Saved.</p>
+ *   <span class="accent">New</span>
+ *   <small class="muted">Optional</small>
+ *
+ * `color` inherits, so a class on a container colors its text; that is plain
+ * CSS inheritance, `--tone` itself still never leaks. Buttons are left out:
+ * the tone is their fill and their text is `--btn-fg`, so a green button
+ * keeps readable text. `.accent` comes after `.muted` here too, so it wins
+ * if both are present.
+ *
+ * `.muted` and `.accent` are also button surfaces:
+ *   - `.muted` is the neutral look. Its values mirror the default of
+ *     `input[type=reset]` and of every non-submit button inside a form
+ *     (semantic/buttons.css).
+ *   - `.accent` is the filled look in the current tone (the accent unless a
+ *     tone class says otherwise). Use it to promote a button that is neutral
+ *     by default, or to undo `.muted`.
+ *
+ *   <form>
+ *     <button type="button">Cancel</button>                  neutral
+ *     <button type="button" class="accent">Next</button>     filled accent
+ *     <button type="button" class="accent positive">Approve</button>
+ *     <button type="submit">Send</button>                    filled accent
+ *   </form>
+ *
+ * `.accent` comes after `.muted` in this file, so it wins if both are present.
+ *
+ * Why these names: `.accent` and `.muted` are free in Tailwind (it only has
+ * `accent-<color>` and the `bg-` / `text-` forms of the tokens);
+ * `.positive`, `.negative` and `.warning` have no Tailwind counterpart.
+ *
+ * Reads:  --color-valid/invalid/warning/text/surface/contrast/muted,
+ *         --btn-tone (set in semantic/buttons.css from --tone)
+ * Layer:  utilities
+ */
+@property --tone {
+  syntax: '*';
+  inherits: false;
+}
+
+@layer utilities {
+  .positive {
+    --tone: var(--color-valid);
+  }
+  .negative {
+    --tone: var(--color-invalid);
+  }
+  .warning {
+    --tone: var(--color-warning);
+  }
+
+  .muted {
+    --btn-bg: color-mix(in oklab, var(--color-text) 8%, var(--color-surface));
+    --btn-fg: var(--color-text);
+    --btn-border: color-mix(
+      in oklab,
+      var(--color-text) 20%,
+      var(--color-surface)
+    );
+    --btn-bg-hover: color-mix(
+      in oklab,
+      var(--color-text) 15%,
+      var(--color-surface)
+    );
+    --btn-border-hover: color-mix(
+      in oklab,
+      var(--color-text) 30%,
+      var(--color-surface)
+    );
+    --btn-ring: color-mix(in oklab, var(--color-text) 25%, transparent);
+  }
+
+  /* Text color. Buttons keep --btn-fg: their tone is the fill. */
+  .muted:not(
+    button,
+    [role='button'],
+    input[type='submit'],
+    input[type='button'],
+    input[type='reset']
+  ) {
+    color: var(--color-muted);
+  }
+
+  :is(.positive, .negative, .warning, .accent):not(
+    button,
+    [role='button'],
+    input[type='submit'],
+    input[type='button'],
+    input[type='reset']
+  ) {
+    color: var(--tone, var(--color-accent));
+  }
+
+  .accent {
+    --btn-bg: var(--btn-tone);
+    --btn-fg: var(--color-contrast);
+    --btn-border: var(--btn-tone);
+    --btn-bg-hover: color-mix(in oklab, var(--btn-tone) 88%, black);
+    --btn-border-hover: var(--btn-bg-hover);
+    --btn-ring: color-mix(in oklab, var(--btn-tone) 35%, transparent);
+  }
+}

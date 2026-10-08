@@ -1,0 +1,48 @@
+/**
+ * SEMANTIC / hr
+ *
+ * Thematic break between blocks. Styles the native `hr` element. No classes
+ * are needed.
+ *
+ * A thin line in a discreet tone, with the vertical rhythm of the page: twice
+ * the space after a block, above and below. Tailwind's preflight already
+ * zeroes the box (`height: 0`, `color: inherit`); here only the line and the
+ * spacing are decided.
+ *
+ * Variable contract
+ * -----------------
+ *   --hr-color      color of the line. Defaults to a faint mix of
+ *                   `--color-text` and `--color-surface`, the same one the
+ *                   page header and footer borders use, so it follows every
+ *                   theme. Utilities and themes can set it without knowing
+ *                   this file's selectors (`<hr style="--hr-color: var(--color-accent)">`).
+ *
+ * Usage
+ *   <p>First topic.</p>
+ *   <hr />
+ *   <p>Second topic.</p>
+ *
+ * Deliberately not here
+ *   - `[role="separator"]` on other elements: a non-native separator carries
+ *     its own meaning and orientation, so it is not restyled blindly.
+ *   - Inside `.stack` and `.cluster` the block margins are reset by those
+ *     utilities (layout.css), so the spacing there comes from `--layout-gap`.
+ *
+ * Reads:  --color-text/surface, --typography-spacing-vertical
+ * See:    semantic/layout.css (header and footer borders use the same mix)
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Base: one-pixel line with the page rhythm
+       ------------------------------------------------------------- */
+    hr {
+        @apply h-0 border-0;
+        margin-block: calc(var(--typography-spacing-vertical) * 2);
+        border-block-start: 1px solid var(
+            --hr-color,
+            color-mix(in oklab, var(--color-text) 12%, var(--color-surface))
+        );
+    }
+}

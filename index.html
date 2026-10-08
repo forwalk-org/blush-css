@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en" data-theme="blush">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Blush CSS: a reset with superpowers</title>
+    <meta
+      name="description"
+      content="Blush CSS is a classless CSS framework built on Tailwind CSS v4. Semantic HTML looks right out of the box; classes only add layout and tone."
+    />
+    <meta name="author" content="Maurizio Melani" />
+    <link rel="author" href="mailto:maurizio@forwalk.org" />
+    <link
+      rel="license"
+      href="https://github.com/forwalk-org/blush-css/blob/main/LICENSE"
+    />
+    <link rel="icon" href="assets/favicon.png" type="image/png" />
+    <!-- This page is built with Blush itself -->
+    <link rel="stylesheet" href="dist/blush.css" />
+    <script src="demo/blush-theme-editor.js"></script>
+    <style>
+      /* The page's own theme, taken from the logo: only the eight public tokens. */
+      @layer theme {
+        [data-theme='glamour'] {
+          --color-accent: oklch(66% 0.21 20);
+          --color-surface: oklch(12% 0.04 18);
+          --color-text: oklch(98% 0.01 20);
+          --color-contrast: oklch(15% 0.04 18);
+          --color-invalid: oklch(70% 0.19 25);
+          --color-valid: oklch(68% 0.16 145);
+          --color-warning: oklch(78% 0.15 75);
+          --color-heading: oklch(95% 0.02 20);
+          --radius-control: 0.6rem;
+          --color-accent-soft: color-mix(
+            in oklch,
+            oklch(66% 0.21 20) 25%,
+            var(--color-surface)
+          );
+        }
+      }
+
+      /* Page layer: only what Blush does not provide */
+      :root {
+        --layout-width: 70rem;
+        --layout-gutter: clamp(1.25rem, 5vw, 3rem);
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        html {
+          scroll-behavior: smooth;
+        }
+      }
+      .section {
+        margin-block: 0;
+        padding-block: clamp(3.5rem, 8vw, 6.5rem);
+        border-top: 1px solid var(--color-border);
+        scroll-margin-top: 1rem;
+      }
+      .section > .stack {
+        --layout-gap: clamp(2rem, 4vw, 3.5rem);
+      }
+      .section > .stack > * {
+        --layout-gap: 1.5rem;
+      }
+      .section > .stack > * > * {
+        --layout-gap: 1rem;
+      }
+      .section > .wrapper > hgroup {
+        max-width: 44rem;
+      }
+
+      /* Nav menu: on small screens the list becomes a dropdown, CSS only. */
+      .nav-menu > input {
+        display: none;
+      }
+      @media (max-width: 78rem) {
+        .nav-menu {
+          position: relative;
+        }
+        .nav-menu > input[type='checkbox'] {
+          display: block;
+          appearance: none;
+          flex: none;
+          width: 2.5rem;
+          height: 2.5rem;
+          margin: 0;
+          padding: 0;
+          border: 0;
+          border-radius: var(--radius-control, 0.6rem);
+          box-shadow: none;
+          color: inherit;
+          cursor: pointer;
+          background:
+            linear-gradient(currentColor 0 0) center 30% / 1.25rem 2px no-repeat,
+            linear-gradient(currentColor 0 0) center / 1.25rem 2px no-repeat,
+            linear-gradient(currentColor 0 0) center 70% / 1.25rem 2px no-repeat;
+        }
+        .nav-menu > input:checked {
+          background:
+            linear-gradient(
+                45deg,
+                transparent calc(50% - 1px),
+                currentColor calc(50% - 1px) calc(50% + 1px),
+                transparent calc(50% + 1px)
+              )
+              center / 1.25rem 1.25rem no-repeat,
+            linear-gradient(
+                -45deg,
+                transparent calc(50% - 1px),
+                currentColor calc(50% - 1px) calc(50% + 1px),
+                transparent calc(50% + 1px)
+              )
+              center / 1.25rem 1.25rem no-repeat;
+        }
+        .nav-menu > input::before,
+        .nav-menu > input::after {
+          content: none;
+        }
+        .nav-menu > input:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+        .nav-menu > ul {
+          display: none;
+          position: absolute;
+          inset-inline: 0;
+          top: 100%;
+          z-index: 10;
+          flex-direction: column;
+          flex-wrap: nowrap;
+          gap: 0.25rem;
+          margin: 0;
+          padding: 0.5rem;
+          background: var(--color-surface);
+          color: var(--color-text);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-control, 0.6rem);
+        }
+        .nav-menu > input:checked ~ ul {
+          display: flex;
+        }
+        .nav-menu > ul a {
+          display: block;
+          padding: 0.6rem 0.75rem;
+        }
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0;
+        background: none;
+        border: 0;
+        box-shadow: none;
+        color: inherit;
+        text-decoration: none;
+      }
+      .brand:is(:hover, :focus-visible) {
+        background: none;
+      }
+      .brand img {
+        height: 2.4rem;
+        width: auto;
+      }
+      .tile {
+        aspect-ratio: 4/3;
+        border-radius: 0.85rem;
+        --overlay-padding: 1rem;
+      }
+      .tile:not(:has(> .cover)) {
+        display: grid;
+        place-content: center;
+        text-align: center;
+        border: 1px solid var(--color-border);
+      }
+      .scroll-x,
+      pre {
+        overflow-x: auto;
+      }
+
+      /* Index only */
+      .num {
+        font-family: var(--font-hero);
+        font-size: 3rem;
+        line-height: 0.9;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <header role="banner" id="top" style="--hero-min-height: min(90vh, 80rem)">
+      <nav aria-label="Main" class="nav-menu">
+        <a
+          class="brand"
+          href="#top"
+          aria-label="Blush CSS: home"
+          title="Blush CSS: home"
+        >
+          <img src="assets/logo.png" alt="Blush CSS logo" /><strong
+            >Blush CSS</strong
+          >
+        </a>
+        <input
+          type="checkbox"
+          aria-label="Menu"
+          aria-controls="main-menu"
+          title="Menu"
+        />
+        <ul id="main-menu">
+          <li><a href="#philosophy">Philosophy</a></li>
+          <li><a href="#see">See it</a></li>
+          <li><a href="#use">Use it</a></li>
+          <li><a href="#themes">Themes</a></li>
+          <li><a href="#api">API</a></li>
+          <li>
+            <a
+              href="https://github.com/forwalk-org/blush-css"
+              data-repo
+              role="button"
+              class="outlined"
+              title="Blush CSS on GitHub"
+              >GitHub</a
+            >
+          </li>
+        </ul>
+      </nav>
+
+      <img
+        src="https://images.unsplash.com/photo-1737276681566-bd86b399dafe?q=80&w=1170&auto=format&fit=crop"
+        alt=""
+        fetchpriority="high"
+      />
+      <div class="wrapper">
+        <hgroup>
+          <p>A reset to a beautiful state</p>
+          <h1>Pretty &amp; semantic by default.</h1>
+        </hgroup>
+        <p>
+          Good HTML looks right out of the box; classes only add layout and
+          tone.
+        </p>
+        <nav aria-label="Hero actions">
+          <a href="#use" role="button">Get started</a>
+          <a
+            href="https://github.com/forwalk-org/blush-css"
+            data-repo
+            role="button"
+            class="outlined"
+            >View on GitHub</a
+          >
+        </nav>
+        <ul>
+          <li>No classes required for clean, semantic HTML</li>
+          <li>Three themes, one stylesheet, no JavaScript</li>
+          <li>Standalone, or the foundation of a Tailwind project</li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="philosophy">
+        <div class="wrapper stack">
+          <hgroup>
+            <p>The design philosophy</p>
+            <h2>Minimalist, spacious, semantic.</h2>
+            <p>
+              Semantic HTML should be naturally beautiful, without cluttering
+              tags with utility classes. Generous spacing and fluid typography
+              give it an airy feel; ARIA attributes and <code>role</code> drive
+              every visual state.
+            </p>
+          </hgroup>
+          <div class="auto-grid" style="--layout-min: min(100%, 18rem)">
+            <article class="stack">
+              <span class="num accent" aria-hidden="true">1</span>
+              <h3>Attributes say what it is</h3>
+              <p>
+                <code>aria-*</code>, <code>role</code> and
+                <code>data-theme</code> describe an element or its state.
+                Accessibility and aesthetics become the same thing.
+              </p>
+            </article>
+            <article class="stack">
+              <span class="num accent" aria-hidden="true">2</span>
+              <h3>Classes say how it looks</h3>
+              <p>
+                A curated boutique: layout (<code>.wrapper</code>
+                <code>.stack</code> <code>.cluster</code>
+                <code>.auto-grid</code>) and tone (<code>.positive</code>
+                <code>.negative</code> <code>.warning</code>
+                <code>.accent</code> <code>.muted</code>).
+              </p>
+            </article>
+            <article class="stack">
+              <span class="num accent" aria-hidden="true">3</span>
+              <h3>Tailwind sits underneath</h3>
+              <p>
+                Tokens are Tailwind tokens. When you need a bespoke exception,
+                the full power of Tailwind v4 is right there.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="see" data-theme="light">
+        <div class="wrapper stack">
+          <hgroup>
+            <p>Plain HTML, styled</p>
+            <h2>See it.</h2>
+            <p>
+              Everything below is unclassed HTML, except for the tone and shape
+              on the buttons.
+            </p>
+          </hgroup>
+          <div class="auto-grid" style="--layout-min: min(100%, 28rem)">
+            <div class="stack">
+              <h3>Buttons</h3>
+              <div class="cluster">
+                <button>Save</button>
+                <button class="positive">Approve</button>
+                <button class="negative">Delete</button>
+                <button class="warning">Careful</button>
+                <button class="muted">Later</button>
+              </div>
+              <div class="cluster">
+                <button class="outlined">Outlined</button>
+                <button class="outlined positive">Positive</button>
+                <button class="outlined negative">Negative</button>
+                <button aria-busy="true">Saving</button>
+                <button disabled>Disabled</button>
+              </div>
+              <p>
+                Status: <strong class="positive">connected</strong>, storage
+                <span class="warning">85% full</span>, system
+                <span class="negative">offline</span>,
+                <small class="muted">updated 2m ago</small>.
+              </p>
+              <p role="status" class="positive">Profile updated.</p>
+              <p role="alert">The payment failed. Check the card number.</p>
+            </div>
+            <form class="stack" onsubmit="return false">
+              <h3>Forms</h3>
+              <div>
+                <label for="f-name">Name</label
+                ><input id="f-name" placeholder="Ada Lovelace" />
+              </div>
+              <div>
+                <label for="f-mail">Email</label
+                ><input
+                  id="f-mail"
+                  type="email"
+                  value="ada@"
+                  aria-invalid="true"
+                /><small
+                  >Validation is <code>aria-invalid</code>, never a
+                  class.</small
+                >
+              </div>
+              <div>
+                <label for="f-sel">Route</label
+                ><select id="f-sel">
+                  <option>Via Francigena</option>
+                  <option>Camino de Santiago</option>
+                </select>
+              </div>
+              <div class="cluster">
+                <label><input type="checkbox" checked /> Checkbox</label>
+                <label><input type="radio" name="r" checked /> Radio</label>
+                <label
+                  ><input type="checkbox" role="switch" checked /> Switch</label
+                >
+              </div>
+              <progress value="62" max="100">62%</progress>
+              <button type="submit">Send</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="use">
+        <div class="wrapper stack">
+          <hgroup>
+            <p>Two ways to use Blush</p>
+            <h2>Standalone, or the foundation of a Tailwind project.</h2>
+          </hgroup>
+          <div class="auto-grid" style="--layout-min: min(100%, 28rem)">
+            <div class="stack">
+              <h3>1. Standalone <code>project.css</code></h3>
+              <p>
+                Compile once, link the result. No Tailwind in your project, no
+                build step on your side.
+              </p>
+              <pre><code>npm install tailwindcss @tailwindcss/cli
+npx @tailwindcss/cli -i src/blush.css -o dist/blush.css</code></pre>
+              <pre><code>&lt;link rel="stylesheet" href="dist/blush.css" /&gt;
+
+&lt;main class="wrapper stack"&gt;
+  &lt;h1&gt;Hello&lt;/h1&gt;
+  &lt;button&gt;Save&lt;/button&gt;
+  &lt;button class="outlined negative"&gt;Delete&lt;/button&gt;
+&lt;/main&gt;</code></pre>
+            </div>
+            <div class="stack">
+              <h3>2. Foundation of a Tailwind project</h3>
+              <p>
+                Import the modules after Tailwind. Blush's tokens become
+                Tailwind utilities that follow the active theme; its own classes
+                are optional.
+              </p>
+              <pre><code>@import 'tailwindcss';
+@import './blush/src/theme/tokens.css';
+/* … theme, base and semantic modules … */</code></pre>
+              <pre><code>&lt;button class="[--tone:var(--color-valid)]"&gt;Approve&lt;/button&gt;
+&lt;section class="bg-surface-soft border border-border
+         rounded-control p-6"&gt;
+  &lt;h2 class="text-accent"&gt;Tailwind on top&lt;/h2&gt;
+&lt;/section&gt;</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="themes" data-theme="accent">
+        <div class="wrapper stack">
+          <hgroup>
+            <p>Tokens and themes</p>
+            <h2>Eight values make a theme.</h2>
+            <p>
+              Four built-in themes, nested anywhere with
+              <code>data-theme</code>. Derived colors (borders, fields, focus
+              rings) are computed from the public tokens, so a small theme is
+              already complete. Use the <strong>Theme</strong> button, top
+              right, to edit them live.
+            </p>
+          </hgroup>
+          <div class="auto-grid" style="--layout-min: min(100%, 14rem)">
+            <div class="tile" data-theme="light">
+              <h4>light</h4>
+              <button>Action</button>
+            </div>
+            <div class="tile" data-theme="dark">
+              <h4>dark</h4>
+              <button>Action</button>
+            </div>
+            <div class="tile" data-theme="accent">
+              <h4>accent</h4>
+              <button>Action</button>
+            </div>
+            <div class="tile" data-theme="glamour">
+              <hgroup>
+                <h4>glamour</h4>
+                <p>(custom inline)</p>
+              </hgroup>
+              <button>Action</button>
+            </div>
+          </div>
+          <pre><code>@layer theme {
+  [data-theme='glamour'] {
+    --color-accent: oklch(66% 0.21 20);
+    --color-surface: oklch(12% 0.04 18);
+    --color-text: oklch(98% 0.01 20);
+    --color-contrast: oklch(15% 0.04 18);
+    --color-invalid: oklch(70% 0.19 25);
+    --color-valid: oklch(68% 0.16 145);
+    --color-warning: oklch(78% 0.15 75);
+    --color-heading: oklch(95% 0.02 20);
+    --radius-control: 0.6rem;
+    --color-accent-soft: color-mix(
+      in oklch,
+      oklch(66% 0.21 20) 25%,
+      var(--color-surface)
+    );
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="section" id="api" data-theme="light">
+        <div class="wrapper stack">
+          <hgroup>
+            <p>The whole API</p>
+            <h2>Small enough for a card.</h2>
+          </hgroup>
+          <div class="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Class</th>
+                  <th>What it does</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <code>.positive</code> <code>.negative</code>
+                    <code>.warning</code>
+                  </td>
+                  <td>Tone: the fill on buttons, the text color elsewhere</td>
+                </tr>
+                <tr>
+                  <td><code>.accent</code> <code>.muted</code></td>
+                  <td>Filled / neutral button surface; accent or muted text</td>
+                </tr>
+                <tr>
+                  <td><code>.outlined</code></td>
+                  <td>Outline shape, combines with any tone</td>
+                </tr>
+                <tr>
+                  <td><code>.wrapper</code> <code>.wrapper.wide</code></td>
+                  <td>Centered column with fluid gutters</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>.stack</code> <code>.cluster</code>
+                    <code>.auto-grid</code>
+                  </td>
+                  <td>Vertical flow, wrapping row, responsive grid</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>.cover</code> <code>.overlay</code>
+                    <code>.overlay-&lt;position&gt;</code>
+                  </td>
+                  <td>Content over media, ten positions</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Styled without classes: text, page layout, media, data, buttons,
+            forms, <code>details</code>, <code>dialog</code>, <code>menu</code>,
+            groups and notices, plus <code>aria-busy</code>,
+            <code>aria-invalid</code>, <code>aria-pressed</code>,
+            <code>aria-expanded</code>, <code>aria-selected</code> and
+            <code>aria-current</code> states. Blush relies on modern CSS:
+            <code>oklch()</code>, <code>color-mix()</code>, cascade layers,
+            nesting and <code>:has()</code>.
+          </p>
+          <div class="cluster">
+            <a
+              href="https://github.com/forwalk-org/blush-css"
+              data-repo
+              role="button"
+              >Read the README</a
+            >
+            <a href="demo/blush-demo.html" role="button" class="outlined"
+              >Full component demo</a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer data-theme="dark">
+      <p>Blush CSS: a reset with superpowers. Built on Tailwind CSS v4.</p>
+      <p>
+        &copy; 2026 <a href="mailto:maurizio@forwalk.org">Maurizio Melani</a>.
+        Released under the
+        <a href="https://github.com/forwalk-org/blush-css/blob/main/LICENSE"
+          >MIT License</a
+        >.
+      </p>
+      <nav aria-label="Links">
+        <ul>
+          <li>
+            <a href="https://github.com/forwalk-org/blush-css" data-repo
+              >GitHub</a
+            >
+          </li>
+          <li><a href="demo/blush-demo.html">Demo</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+    <script>
+      // On github.io the repository link is derived from the address: no URL to edit.
+      const m = location.hostname.match(/^([^.]+)\.github\.io$/),
+        repo = location.pathname.split('/')[1]
+      if (m && repo)
+        document
+          .querySelectorAll('a[data-repo]')
+          .forEach((a) => (a.href = `https://github.com/${m[1]}/${repo}`))
+    </script>
+  </body>
+</html>

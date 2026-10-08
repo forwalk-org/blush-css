@@ -1,0 +1,266 @@
+/**
+ * SEMANTIC / forms / fields
+ *
+ * label, text inputs, select, textarea, search / date / time inputs, number,
+ * ARIA validation, helper text (<small>) and fieldset / legend.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   aria-invalid="true"    error border, ring and icon
+ *   aria-invalid="false"   success border, ring and icon
+ *   disabled               dimmed, not interactive
+ * A <small> right after the field takes the same state color.
+ *
+ * Reads:  --color-accent/surface/text/muted/border/valid/invalid,
+ *         --radius-control, --icon-*, and the derived form tokens
+ *         --color-field, --color-field-hover, --color-field-border,
+ *         --color-field-border-hover, --color-focus-ring,
+ *         --color-valid-ring, --color-invalid-ring (see derived.css)
+ * Inside [role="group"] the layout is handled by group.css.
+ * Layer:  components
+ */
+@layer components {
+  /* -------------------------------------------------------------
+       1. Label
+       ------------------------------------------------------------- */
+  label {
+    @apply mb-1.5 block text-sm font-medium text-[color:var(--color-text)];
+  }
+
+  /* A label that wraps a checkbox or radio becomes an inline row. */
+  label:has(input[type='checkbox'], input[type='radio']) {
+    @apply inline-flex cursor-pointer items-center gap-2.5 text-base font-normal select-none mb-0 w-fit;
+  }
+
+  label > :where(input, select, textarea) {
+    @apply mt-1;
+  }
+
+  /* -------------------------------------------------------------
+       2. Text inputs, select, textarea
+       ------------------------------------------------------------- */
+  input:not(
+    [type='checkbox'],
+    [type='radio'],
+    [type='range'],
+    [type='color'],
+    [type='hidden'],
+    [type='submit'],
+    [type='button'],
+    [type='reset']
+  ),
+  select,
+  textarea {
+    @apply w-full mb-4 px-4 py-2.5 min-h-11 appearance-none rounded-[var(--radius-control)]
+            transition-colors duration-150
+            placeholder:text-[color:var(--color-muted)]
+            focus:outline-none focus:border-[color:var(--color-accent)]
+            focus:ring-3 focus:ring-[color:var(--color-focus-ring)]
+            disabled:opacity-55 disabled:cursor-not-allowed;
+
+    /* Fill and border come from the theme's derived field tokens. */
+    background-color: var(--color-field);
+    border: 1px solid var(--color-field-border);
+    color: var(--color-text);
+  }
+
+  /* Hover deepens the tint slightly. */
+  input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='range'],
+      [type='file'],
+      [type='color'],
+      [type='hidden'],
+      [type='submit'],
+      [type='button'],
+      [type='reset']
+    ):hover:not(:disabled),
+  select:hover:not(:disabled),
+  textarea:hover:not(:disabled) {
+    background-color: var(--color-field-hover);
+    border-color: var(--color-field-border-hover);
+  }
+
+  textarea {
+    @apply min-h-32 resize-y block;
+  }
+
+  input[type='file'] {
+    @apply p-0 pr-4;
+  }
+
+  /* -------------------------------------------------------------
+       3. Select with an SVG chevron
+       ------------------------------------------------------------- */
+  select {
+    @apply pe-10 bg-no-repeat bg-[position:right_0.75rem_center] bg-[size:1rem_auto];
+    background-image: var(--icon-chevron);
+  }
+
+  select[multiple] {
+    @apply pe-4 h-auto bg-none;
+  }
+
+  /* -------------------------------------------------------------
+       4. Search
+       ------------------------------------------------------------- */
+  input[type='search']:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='range'],
+      [type='file']
+    ) {
+    @apply ps-10 bg-no-repeat bg-[size:1rem_auto];
+    background-image: var(--icon-search);
+    background-position: center left 0.875rem;
+
+    &[aria-invalid='false'] {
+      @apply ps-10 pe-10;
+      background-image: var(--icon-search), var(--icon-valid);
+      background-position:
+        center left 0.875rem,
+        center right 0.75rem;
+    }
+
+    &[aria-invalid='true'] {
+      @apply ps-10 pe-10;
+      background-image: var(--icon-search), var(--icon-invalid);
+      background-position:
+        center left 0.875rem,
+        center right 0.75rem;
+    }
+  }
+
+  /* -------------------------------------------------------------
+       5. Date and time
+       ------------------------------------------------------------- */
+  input:is(
+    [type='date'],
+    [type='datetime-local'],
+    [type='month'],
+    [type='time'],
+    [type='week']
+  ) {
+    @apply pe-10 bg-no-repeat bg-[size:1rem_auto];
+    background-image: var(--icon-date);
+    background-position: center right 0.75rem;
+
+    &[type='time'] {
+      background-image: var(--icon-time);
+    }
+
+    /* The native indicator stays on top of the SVG, fully transparent,
+           so a click on the icon still opens the picker. */
+    &::-webkit-calendar-picker-indicator {
+      width: 1rem;
+      margin-right: -0.5rem;
+      margin-left: 0.5rem;
+      opacity: 0;
+      cursor: pointer;
+    }
+  }
+
+  /* Right-to-left: icons move to the other side. */
+  [dir='rtl'] {
+    input[type='search']:not(
+        [type='checkbox'],
+        [type='radio'],
+        [type='range'],
+        [type='file']
+      ) {
+      background-position: center right 0.875rem;
+
+      &[aria-invalid] {
+        background-position:
+          center right 0.875rem,
+          center left 0.75rem;
+      }
+    }
+
+    input:is(
+      [type='date'],
+      [type='datetime-local'],
+      [type='month'],
+      [type='time'],
+      [type='week']
+    ) {
+      text-align: right;
+      background-position: center left 0.75rem;
+    }
+  }
+
+  /* -------------------------------------------------------------
+       6. Number: no native spinners (steppers are built with role="group")
+       ------------------------------------------------------------- */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  /* -------------------------------------------------------------
+       7. ARIA validation
+       ------------------------------------------------------------- */
+  /* Written with :is(), not :where(), on purpose: the base field rule above
+       has the specificity of `input:not(...)`, and validation must match it
+       to win by source order. With :where() the state border, ring and icon
+       padding would never apply. */
+  :is(input, textarea)[aria-invalid='false'] {
+    @apply border-[color:var(--color-valid)] pe-10 bg-no-repeat bg-[position:right_0.75rem_center] bg-[size:1rem_auto]
+            focus:border-[color:var(--color-valid)] focus:ring-[color:var(--color-valid-ring)];
+    background-image: var(--icon-valid);
+  }
+
+  :is(input, textarea)[aria-invalid='true'] {
+    @apply border-[color:var(--color-invalid)] pe-10 bg-no-repeat bg-[position:right_0.75rem_center] bg-[size:1rem_auto]
+            focus:border-[color:var(--color-invalid)] focus:ring-[color:var(--color-invalid-ring)];
+    background-image: var(--icon-invalid);
+  }
+
+  /* The field hover rule is more specific than the state rules above, so the
+       state border is restated for :hover to keep the neutral border away. */
+  :is(input, textarea)[aria-invalid='false']:hover:not(:disabled) {
+    border-color: var(--color-valid);
+  }
+
+  :is(input, textarea)[aria-invalid='true']:hover:not(:disabled) {
+    border-color: var(--color-invalid);
+  }
+
+  /* -------------------------------------------------------------
+       8. Helper text
+       ------------------------------------------------------------- */
+  :where(input, select, textarea, fieldset) + small {
+    @apply -mt-2 mb-4 block w-full text-xs text-[color:var(--color-muted)];
+  }
+
+  :where(input, select, textarea, fieldset)[aria-invalid='false'] + small {
+    @apply text-[color:var(--color-valid)];
+  }
+
+  :where(input, select, textarea, fieldset)[aria-invalid='true'] + small {
+    @apply text-[color:var(--color-invalid)];
+  }
+
+  /* -------------------------------------------------------------
+       9. Fieldset and legend
+       ------------------------------------------------------------- */
+  fieldset {
+    @apply w-full mb-6 p-5 border border-[color:var(--color-border)] rounded-xl flex flex-col gap-3;
+  }
+
+  /* Controls inside a fieldset are spaced by its gap, not by their margin. */
+  fieldset
+    :where(input:not([type='checkbox'], [type='radio']), select, textarea) {
+    @apply mb-0;
+  }
+
+  legend {
+    @apply px-2 font-semibold text-[color:var(--color-text)];
+  }
+}

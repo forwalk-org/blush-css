@@ -1,0 +1,34 @@
+/**
+ * UTILITIES / outlined
+ *
+ * `.outlined` turns a filled button into an outline button: transparent fill,
+ * tone-colored text and border, and a 10% tint on hover.
+ *
+ * It changes the shape and nothing else, so the tone comes from the tone
+ * classes and the two combine in any order.
+ * Tone classes combine with it in any order. `.outlined` is imported after
+ * tone.css, so it also wins over `.muted` and `.accent`, which set the same
+ * `--btn-*` variables.
+ *
+ * Usage
+ *   <button class="outlined">Cancel</button>
+ *   <button class="outlined positive">Approve</button>
+ *   <button class="outlined negative">Reject</button>
+ *
+ * Why these names: `.outlined`, not `.outline`. Tailwind ships an `outline`
+ * utility (outline-style / outline-width); the distinct name keeps both
+ * usable in the same project.
+ *
+ * Reads:  --btn-tone (set in semantic/buttons.css from --tone)
+ * Writes: --btn-bg, --btn-fg, --btn-border, --btn-bg-hover, --btn-border-hover
+ * Layer:  utilities
+ */
+@layer utilities {
+  .outlined {
+    --btn-bg: transparent;
+    --btn-fg: var(--btn-tone);
+    --btn-border: var(--btn-tone);
+    --btn-bg-hover: color-mix(in oklab, var(--btn-tone) 10%, transparent);
+    --btn-border-hover: var(--btn-tone);
+  }
+}

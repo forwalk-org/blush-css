@@ -1,0 +1,82 @@
+/**
+ * BASE / reboot
+ *
+ * Page-level defaults: font assignment, fluid root font size, page colors,
+ * text rendering (antialiasing, hanging punctuation), a consistent bold
+ * weight, sub / sup, small, selection and the background of nested themes.
+ *
+ * Root size: 16px on phones, growing to 18px on wide screens. Every size in
+ * Blush is in rem or em, so this one value scales the whole page. The floor
+ * is 1rem, not a px value, so the reader's browser font setting still
+ * applies; 16px is also the size below which iOS Safari zooms into a field
+ * on focus.
+ *
+ * Leading: 1.625 for body text, an airy rhythm for long reading. Leading is
+ * proportional to size across Blush: the smaller the text, the more open
+ * its lines; short secondary text (small, captions, helper text) runs at
+ * 1.5, large headings close up (see semantic/typography.css).
+ *
+ * Numerals stay proportional in running text; tables, ordered lists, time
+ * and data switch to tabular figures where columns of digits must align.
+ *
+ * Reads:  --font-text, --font-sans, --color-surface/text/accent/contrast
+ * Layer:  base
+ */
+@layer base {
+  /* The page font. Buttons and fields inherit it. */
+  html,
+  body,
+  [data-theme] {
+    font-family: var(--font-text, var(--font-sans));
+  }
+
+  html {
+    @apply bg-[color:var(--color-surface)] text-[color:var(--color-text)] antialiased;
+    font-size: clamp(1rem, 0.94rem + 0.25vw, 1.125rem);
+    hanging-punctuation: first last;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply leading-relaxed;
+  }
+
+  /* Consistent bold weight across Chrome, Safari and Firefox. */
+  b,
+  strong {
+    font-weight: 700;
+  }
+
+  /* Sub and sup without disturbing the line height. */
+  sub,
+  sup {
+    position: relative;
+    font-size: 0.75em;
+    line-height: 0;
+    vertical-align: baseline;
+  }
+  sub {
+    bottom: -0.25em;
+  }
+
+  /* Small print never drops below 0.75rem (12px at the base size), even
+       inside an already smaller block such as aside or footer. */
+  small {
+    font-size: max(0.8em, 0.75rem);
+    @apply leading-normal;
+  }
+  sup {
+    top: -0.5em;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-contrast);
+  }
+
+  /* Nested themes paint their own surface and text color. */
+  [data-theme] {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+}

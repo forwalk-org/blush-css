@@ -1,0 +1,156 @@
+/**
+ * SEMANTIC / busy
+ *
+ * The busy state, driven by `aria-busy="true"`. There is no loading class:
+ * setting the attribute is what tells assistive technology, and it is also
+ * what styles the element.
+ *
+ *   Inline elements (button, a, span, ...)   a spinner before the content,
+ *                                            the element becomes inert
+ *   Containers (form, fieldset, div, ...)    a translucent veil with blur, a centered
+ *                                            spinner, and smooth fade-in/out transitions
+ *
+ * Dials (all optional)
+ *   --busy-size   spinner size in a container (default 2rem)
+ *   --busy-blur   veil blur radius (default .8px)
+ *   --busy-transition-duration  duration for overlay fade transition (default 200ms)
+ *
+ * Under `prefers-reduced-motion` the spinner turns slower instead of
+ * stopping, and transition durations are minimized.
+ *
+ * Reads:  --icon-loading, --color-surface, --color-accent
+ * Layer:  components
+ */
+@layer components {
+  @keyframes busy-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* -------------------------------------------------------------
+       1. Inline elements
+       ------------------------------------------------------------- */
+  [aria-busy='true']:not(
+    :is(
+      form,
+      fieldset,
+      div,
+      section,
+      article,
+      aside,
+      main,
+      nav,
+      table,
+      ul,
+      ol,
+      dl,
+      figure,
+      details,
+      blockquote,
+      pre,
+      input,
+      select,
+      textarea,
+      html,
+      body
+    )
+  ) {
+    @apply pointer-events-none select-none whitespace-nowrap opacity-80;
+
+    &::before {
+      @apply inline-block shrink-0 h-[1em] w-[1em] align-[-0.125em] bg-current content-[''];
+      background-image: none;
+      -webkit-mask: var(--icon-loading) center / contain no-repeat;
+      mask: var(--icon-loading) center / contain no-repeat;
+      animation: busy-spin 0.75s linear infinite;
+    }
+
+    &:not(:empty)::before {
+      @apply me-2;
+    }
+
+    &:empty {
+      @apply inline-flex items-center justify-center text-center;
+    }
+  }
+
+  /* -------------------------------------------------------------
+       2. Containers: Istanziati SOLO su [aria-busy="true"]
+       ------------------------------------------------------------- */
+  :is(
+    form,
+    fieldset,
+    div,
+    section,
+    article,
+    aside,
+    main,
+    nav,
+    table,
+    ul,
+    ol,
+    dl,
+    figure,
+    details,
+    blockquote,
+    pre
+  )[aria-busy='true'] {
+    @apply relative isolate pointer-events-none select-none;
+
+    /* Backdrop veil element */
+    &::before {
+      @apply absolute inset-0 z-10 block h-auto w-auto m-0 rounded-[inherit] content-[''];
+      background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+      -webkit-backdrop-filter: blur(var(--busy-blur, 0.8px));
+      backdrop-filter: blur(var(--busy-blur, 0.8px));
+
+      opacity: 1;
+      visibility: visible;
+      transition:
+        opacity var(--busy-transition-duration, 200ms) ease-in-out,
+        visibility var(--busy-transition-duration, 200ms) ease-in-out;
+      transition-behavior: allow-discrete;
+    }
+
+    /* Centered loading spinner */
+    &::after {
+      @apply absolute top-1/2 left-1/2 z-11 content-[''];
+      width: var(--busy-size, 2rem);
+      height: var(--busy-size, 2rem);
+      margin-top: calc(var(--busy-size, 2rem) / -2);
+      margin-left: calc(var(--busy-size, 2rem) / -2);
+      background-color: var(--color-accent);
+      -webkit-mask: var(--icon-loading) center / contain no-repeat;
+      mask: var(--icon-loading) center / contain no-repeat;
+      animation: busy-spin 0.75s linear infinite;
+
+      opacity: 1;
+      visibility: visible;
+      transition:
+        opacity var(--busy-transition-duration, 200ms) ease-in-out,
+        visibility var(--busy-transition-duration, 200ms) ease-in-out;
+      transition-behavior: allow-discrete;
+    }
+
+    /* Definisce lo stato iniziale per la dissolvenza in entrata (fade-in) */
+    @starting-style {
+      &::before,
+      &::after {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+  }
+
+  /* -------------------------------------------------------------
+       3. Reduced motion
+       ------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    [aria-busy='true']::before,
+    [aria-busy='true']::after {
+      animation-duration: 2s;
+      transition-duration: 0.01ms;
+    }
+  }
+}

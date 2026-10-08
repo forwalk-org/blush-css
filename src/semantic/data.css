@@ -1,0 +1,200 @@
+/**
+ * SEMANTIC / data
+ *
+ * Elements that present data and quoted content: `progress`, `meter`, `mark`,
+ * `time`, `data`, `blockquote`, `q`, `cite` and `abbr`. No classes are needed.
+ *
+ * Variable contract
+ * -----------------
+ * Progress and meter read their colors from custom properties set on the
+ * element itself, so a tone class can change them without knowing any selector
+ * of this file.
+ *
+ *   progress
+ *     --data-tone     fill. Defaults to `--tone`, then to the accent.
+ *     --data-track    track behind the fill (derived from the tone)
+ *
+ *   meter
+ *     --meter-good    value in the optimum region    (default --color-valid)
+ *     --meter-fair    value in the suboptimum region (default --color-warning)
+ *     --meter-poor    value in the worst region      (default --color-invalid)
+ *     --data-track    track behind the fill
+ *
+ * `--tone` (set by .positive / .negative / .warning in utilities/tone.css)
+ * overrides all three meter colors, which is rarely what a meter wants:
+ * leave it unset and let `low`, `high` and `optimum` pick the color.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   progress without a value      animated bar (`:indeterminate`)
+ *   meter value / low / high /    the browser picks the region; the region
+ *   optimum                       picks the color
+ *
+ * Usage
+ *   <progress value="40" max="100">40%</progress>
+ *   <progress class="positive" value="90" max="100">90%</progress>
+ *   <meter value="0.8" low="0.3" high="0.7" optimum="1">80%</meter>
+ *   <time datetime="2026-10-05">5 October 2026</time>
+ *
+ * Under `prefers-reduced-motion` the indeterminate bar moves slower instead of
+ * stopping, so the busy state stays visible.
+ *
+ * Reads:  --color-text/muted/accent/surface/surface-soft/valid/invalid/warning,
+ *         --radius-control, --typography-spacing-top
+ * Layer:  components
+ */
+@layer components {
+
+    @keyframes data-indeterminate {
+        from { background-position: -40% 0; }
+        to   { background-position: 140% 0; }
+    }
+
+    /* -------------------------------------------------------------
+       1. Progress
+       ------------------------------------------------------------- */
+    progress {
+        --data-tone: var(--tone, var(--color-accent));
+        --data-track: color-mix(in oklab, var(--data-tone) 15%, var(--color-surface-soft));
+
+        @apply block w-full h-3 m-0 mb-4 appearance-none overflow-hidden rounded-full border-0;
+        background-color: var(--data-track);
+        color: var(--data-tone);
+
+        /* WebKit paints the track in a pseudo-element: keep it transparent so
+           the element's own track color shows, as in Gecko. */
+        &::-webkit-progress-bar {
+            background-color: transparent;
+        }
+
+        &::-webkit-progress-value {
+            @apply rounded-full transition-[width] duration-300;
+            background-color: var(--data-tone);
+        }
+
+        &::-moz-progress-bar {
+            @apply rounded-full;
+            background-color: var(--data-tone);
+        }
+    }
+
+    /* No value: a segment of the tone slides along the track. */
+    progress:indeterminate {
+        background-image: linear-gradient(90deg, transparent 0%, var(--data-tone) 50%, transparent 100%);
+        background-size: 40% 100%;
+        background-repeat: no-repeat;
+        animation: data-indeterminate 1.2s ease-in-out infinite;
+    }
+
+    /* -------------------------------------------------------------
+       2. Meter
+          The three regions map to the three semantic tones.
+       ------------------------------------------------------------- */
+    meter {
+        --meter-good: var(--tone, var(--color-valid));
+        --meter-fair: var(--tone, var(--color-warning));
+        --meter-poor: var(--tone, var(--color-invalid));
+        --data-track: color-mix(in oklab, var(--color-text) 10%, var(--color-surface));
+
+        @apply block w-full h-3 m-0 mb-4 appearance-none overflow-hidden rounded-full border-0;
+        background-color: var(--data-track);
+
+        &::-webkit-meter-bar {
+            @apply h-full rounded-full border-0;
+            background-color: var(--data-track);
+        }
+
+        &::-webkit-meter-optimum-value {
+            @apply rounded-full transition-[width] duration-300;
+            background: var(--meter-good);
+        }
+
+        &::-webkit-meter-suboptimum-value {
+            @apply rounded-full transition-[width] duration-300;
+            background: var(--meter-fair);
+        }
+
+        &::-webkit-meter-even-less-good-value {
+            @apply rounded-full transition-[width] duration-300;
+            background: var(--meter-poor);
+        }
+
+        &::-moz-meter-bar {
+            @apply rounded-full;
+        }
+    }
+
+    /* Gecko picks the region with pseudo-classes. Each rule stands alone: a
+       browser that does not know one of them would drop a shared list. */
+    meter:-moz-meter-optimum::-moz-meter-bar {
+        background: var(--meter-good);
+    }
+
+    meter:-moz-meter-sub-optimum::-moz-meter-bar {
+        background: var(--meter-fair);
+    }
+
+    meter:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+        background: var(--meter-poor);
+    }
+
+    /* -------------------------------------------------------------
+       3. Highlight, dates and numbers
+       ------------------------------------------------------------- */
+    mark {
+        @apply rounded px-1.5 py-0.5;
+        background-color: color-mix(in oklab, var(--color-accent) 22%, var(--color-surface));
+        color: var(--color-text);
+    }
+
+    time,
+    data {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* -------------------------------------------------------------
+       4. Quotes: blockquote, q, cite
+       ------------------------------------------------------------- */
+    blockquote {
+        margin-block: var(--typography-spacing-top);
+        padding-block: 0.5em;
+        padding-inline-start: 1.25rem;
+        padding-inline-end: 0;
+        border-inline-start: 0.25rem solid var(--color-accent);
+        font-style: italic;
+        background: color-mix(in oklab, var(--color-accent) 4%, transparent);
+        border-radius: 0 var(--radius-control) var(--radius-control) 0;
+
+        footer,
+        > cite {
+            margin-block-start: 0.5em;
+            font-style: normal;
+            font-size: 0.875em;
+            color: var(--color-muted);
+
+            &::before {
+                content: "— ";
+            }
+        }
+
+        /* A <cite> placed directly in the quote is its attribution line. */
+        > cite {
+            display: block;
+        }
+    }
+
+    /* The quotation marks come from the browser, according to `lang`. */
+    q {
+        font-style: italic;
+    }
+
+    /* -------------------------------------------------------------
+       5. Abbreviations
+       ------------------------------------------------------------- */
+    abbr[title] {
+        text-decoration: underline dotted var(--color-muted);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.2em;
+        cursor: help;
+    }
+}

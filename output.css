@@ -1,0 +1,3031 @@
+/* File: src/utilities/media.css */
+/**
+ * UTILITIES / media
+ *
+ * Place content over media (an image, a video, a graphic) with two classes.
+ * The content layer is positioned over the media and aligned with flexbox.
+ *
+ *   .cover      stretches an element to fill its parent
+ *               (`object-fit: cover`, behind the overlay)
+ *   .overlay    a content layer that fills the parent and aligns its content
+ *   .overlay-*  the position of that content (9-point grid, plus `full`)
+ *
+ * The direct parent of an `.overlay` is detected with `:has()`. It becomes a
+ * clipped, relatively positioned grid (`overflow: hidden`, own stacking
+ * context), so no wrapper class is required.
+ *
+ * Stacking: `.cover` sits at z-index 10 and ignores pointer events;
+ * `.overlay` sits at 100.
+ *
+ * Positions (default: bottom-left)
+ *   .overlay-top-left     .overlay-top      .overlay-top-right
+ *   .overlay-center-left  .overlay-center   .overlay-center-right
+ *   .overlay-bottom-left  .overlay-bottom   .overlay-bottom-right
+ *   .overlay-full         content spread from top to bottom
+ *
+ * Dials (all optional)
+ *   --overlay-color     background of the overlay: any gradient or color
+ *                       (default: a surface-colored scrim, 60% to 80%)
+ *   --overlay-padding   padding of the overlay (default 6 x --spacing = 1.5rem)
+ *
+ * Usage
+ *   <article class="rounded-xl">
+ *     <img class="cover" src="mountain.jpg" alt="Dolomites">
+ *     <div class="overlay overlay-bottom-left">
+ *       <h3>Tre Cime di Lavaredo</h3>
+ *       <p>10 km loop</p>
+ *     </div>
+ *   </article>
+ *
+ *   <div style="--overlay-color: linear-gradient(180deg, transparent, rgb(0 0 0 / .8))">
+ *     <video class="cover" src="hero.mp4" autoplay loop muted></video>
+ *     <div class="overlay overlay-center">
+ *       <h2>Explore the outdoors</h2>
+ *     </div>
+ *   </div>
+ *
+ * Reads:  --color-surface, --spacing
+ * Layer:  utilities
+ */
+@layer utilities {
+  /* The direct parent of an overlay: clipped grid, positioning context. */
+  :has(> .overlay) {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    overflow: hidden;
+  }
+
+  /* Background media. */
+  .cover {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: cover;
+    object-position: center;
+    pointer-events: none;
+  }
+
+  /* The content layer fills the parent; flexbox aligns what is inside. */
+  .overlay {
+    position: absolute;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+    padding: var(--overlay-padding, calc(var(--spacing) * 6));
+
+    background: var(
+      --overlay-color,
+      linear-gradient(
+        180deg,
+        color-mix(in oklch, var(--color-surface) 60%, transparent) 0%,
+        color-mix(in oklch, var(--color-surface) 80%, transparent) 100%
+      )
+    );
+  }
+
+  /* Position modifiers. They follow .overlay, so they win at equal specificity. */
+  .overlay-top-left {
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .overlay-top {
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+  }
+  .overlay-top-right {
+    justify-content: flex-start;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .overlay-center-left {
+    justify-content: center;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .overlay-center {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .overlay-center-right {
+    justify-content: center;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .overlay-bottom-left {
+    justify-content: flex-end;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .overlay-bottom {
+    justify-content: flex-end;
+    align-items: center;
+    text-align: center;
+  }
+  .overlay-bottom-right {
+    justify-content: flex-end;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  /* Content distributed along the full height. */
+  .overlay-full {
+    justify-content: space-between;
+    align-items: stretch;
+  }
+}
+-e 
+
+/* File: src/utilities/outlined.css */
+/**
+ * UTILITIES / outlined
+ *
+ * `.outlined` turns a filled button into an outline button: transparent fill,
+ * tone-colored text and border, and a 10% tint on hover.
+ *
+ * It changes the shape and nothing else, so the tone comes from the tone
+ * classes and the two combine in any order.
+ * Tone classes combine with it in any order. `.outlined` is imported after
+ * tone.css, so it also wins over `.muted` and `.accent`, which set the same
+ * `--btn-*` variables.
+ *
+ * Usage
+ *   <button class="outlined">Cancel</button>
+ *   <button class="outlined positive">Approve</button>
+ *   <button class="outlined negative">Reject</button>
+ *
+ * Why these names: `.outlined`, not `.outline`. Tailwind ships an `outline`
+ * utility (outline-style / outline-width); the distinct name keeps both
+ * usable in the same project.
+ *
+ * Reads:  --btn-tone (set in semantic/buttons.css from --tone)
+ * Writes: --btn-bg, --btn-fg, --btn-border, --btn-bg-hover, --btn-border-hover
+ * Layer:  utilities
+ */
+@layer utilities {
+  .outlined {
+    --btn-bg: transparent;
+    --btn-fg: var(--btn-tone);
+    --btn-border: var(--btn-tone);
+    --btn-bg-hover: color-mix(in oklch, var(--btn-tone) 10%, transparent);
+    --btn-border-hover: var(--btn-tone);
+  }
+}
+-e 
+
+/* File: src/utilities/tone.css */
+/**
+ * UTILITIES / tone
+ *
+ * Opt-in classes that give an element a semantic color. They only assign
+ * custom properties, so they carry no knowledge of any component: a component
+ * decides what to do with the tone it receives.
+ *
+ *   .positive   success / confirm     (--color-valid)
+ *   .negative   danger / destructive  (--color-invalid)
+ *   .warning    caution               (--color-warning)
+ *   .muted      neutral surface, for secondary actions
+ *   .accent     filled in the current tone: the opposite of .muted
+ *
+ * The tone lives in `--tone`. buttons.css reads it today; any module can read
+ * it tomorrow (`var(--tone, var(--color-accent))`).
+ *
+ *   <button class="positive">Confirm</button>
+ *   <button class="outlined negative">Delete</button>
+ *   <a href="/save" role="button" class="warning">Review</a>
+ *
+ * `--tone` is registered as NON-inheriting. A tone applies to the element that
+ * carries the class, never to its descendants: `<form class="negative">` does
+ * not turn every button inside it red.
+ *
+ * Text color
+ * ----------
+ * The same classes also color the text of any element that is not a button:
+ *   .positive .negative .warning   the tone (--tone)
+ *   .accent                        the current tone, or the accent
+ *   .muted                         --color-muted (secondary text)
+ *
+ *   <p class="positive">Saved.</p>
+ *   <span class="accent">New</span>
+ *   <small class="muted">Optional</small>
+ *
+ * `color` inherits, so a class on a container colors its text; that is plain
+ * CSS inheritance, `--tone` itself still never leaks. Buttons are left out:
+ * the tone is their fill and their text is `--btn-fg`, so a green button
+ * keeps readable text. `.accent` comes after `.muted` here too, so it wins
+ * if both are present.
+ *
+ * `.muted` and `.accent` are also button surfaces:
+ *   - `.muted` is the neutral look. Its values mirror the default of
+ *     `input[type=reset]` and of every non-submit button inside a form
+ *     (semantic/buttons.css).
+ *   - `.accent` is the filled look in the current tone (the accent unless a
+ *     tone class says otherwise). Use it to promote a button that is neutral
+ *     by default, or to undo `.muted`.
+ *
+ *   <form>
+ *     <button type="button">Cancel</button>                  neutral
+ *     <button type="button" class="accent">Next</button>     filled accent
+ *     <button type="button" class="accent positive">Approve</button>
+ *     <button type="submit">Send</button>                    filled accent
+ *   </form>
+ *
+ * `.accent` comes after `.muted` in this file, so it wins if both are present.
+ *
+ * Why these names: `.accent` and `.muted` are free in Tailwind (it only has
+ * `accent-<color>` and the `bg-` / `text-` forms of the tokens);
+ * `.positive`, `.negative` and `.warning` have no Tailwind counterpart.
+ *
+ * Reads:  --color-valid/invalid/warning/text/surface/contrast/muted,
+ *         --btn-tone (set in semantic/buttons.css from --tone)
+ * Layer:  utilities
+ */
+@property --tone {
+  syntax: '*';
+  inherits: false;
+}
+
+@layer utilities {
+  .positive {
+    --tone: var(--color-valid);
+  }
+  .negative {
+    --tone: var(--color-invalid);
+  }
+  .warning {
+    --tone: var(--color-warning);
+  }
+
+  .muted {
+    --btn-bg: color-mix(in oklch, var(--color-text) 8%, var(--color-surface));
+    --btn-fg: var(--color-text);
+    --btn-border: color-mix(
+      in oklch,
+      var(--color-text) 20%,
+      var(--color-surface)
+    );
+    --btn-bg-hover: color-mix(
+      in oklch,
+      var(--color-text) 15%,
+      var(--color-surface)
+    );
+    --btn-border-hover: color-mix(
+      in oklch,
+      var(--color-text) 30%,
+      var(--color-surface)
+    );
+    --btn-ring: color-mix(in oklch, var(--color-text) 25%, transparent);
+  }
+
+  /* Text color. Buttons keep --btn-fg: their tone is the fill. */
+  .muted:not(
+    button,
+    [role='button'],
+    input[type='submit'],
+    input[type='button'],
+    input[type='reset']
+  ) {
+    color: var(--color-muted);
+  }
+
+  :is(.positive, .negative, .warning, .accent):not(
+    button,
+    [role='button'],
+    input[type='submit'],
+    input[type='button'],
+    input[type='reset']
+  ) {
+    color: var(--tone, var(--color-accent));
+  }
+
+  .accent {
+    --btn-bg: var(--btn-tone);
+    --btn-fg: var(--color-contrast);
+    --btn-border: var(--btn-tone);
+    --btn-bg-hover: color-mix(in oklch, var(--btn-tone) 88%, black);
+    --btn-border-hover: var(--btn-bg-hover);
+    --btn-ring: color-mix(in oklch, var(--btn-tone) 35%, transparent);
+  }
+}
+-e 
+
+/* File: src/utilities/layout.css */
+/**
+ * UTILITIES / layout
+ *
+ * A deliberately small set of layout primitives. Each one does a single job
+ * and reads its dials from custom properties, so there is nothing to memorise
+ * beyond the class name.
+ *
+ *   .wrapper      centered column with fluid side gutters
+ *   .wrapper.wide centered column with a 20% wider maximum layout width (78rem default)
+ *   .stack        vertical flow with even spacing
+ *   .cluster      wrapping row, for buttons, tags and meta
+ *   .auto-grid    responsive grid: as many columns as fit
+ *
+ * Dials (all optional)
+ *   --layout-width   max width of .wrapper                (default 65rem)
+ *   --layout-gutter  side gutter of .wrapper              (default 6 x --spacing = 1.5rem)
+ *   --layout-gap     gap of .stack / .cluster / .auto-grid
+ *                    (defaults 5 / 3 / 6 x --spacing = 1.25 / 0.75 / 1.5rem)
+ *   --layout-min     minimum column width of .auto-grid  (default --container-3xs = 16rem)
+ *
+ * The defaults come from Tailwind's own scale, so they follow a project that
+ * customises `--spacing` or `--container-*`.
+ *
+ * Usage
+ *   <main class="wrapper stack">
+ *     <section class="wrapper wide auto-grid" style="--layout-min: 14rem">...</section>
+ *     <nav class="cluster"><button>One</button><button>Two</button></nav>
+ *   </main>
+ *
+ * Why these names: `container` and `grid` are Tailwind utilities. Distinct
+ * names let both coexist in a project that also scans its sources.
+ *
+ * Reads:  --spacing, --container-3xs
+ * Layer:  utilities
+ */
+@layer utilities {
+  /* -------------------------------------------------------------
+       1. Wrapper (Standard & Wide)
+       ------------------------------------------------------------- */
+
+  /**
+     * Centered layout container with responsive inline gutters.
+     * Evaluates custom layout width or defaults to 65rem.
+     */
+  .wrapper {
+    @apply mx-auto;
+    width: min(
+      100% - 2 * var(--layout-gutter, calc(var(--spacing) * 6)),
+      var(--layout-width, 65rem)
+    );
+
+    /**
+         * Wide wrapper variant: increases maximum layout width by 20%
+         * (65rem * 1.2 = 78rem default).
+         */
+    &.wide {
+      width: min(
+        100% - 2 * var(--layout-gutter, calc(var(--spacing) * 6)),
+        var(--layout-width, calc(65rem * 1.2))
+      );
+    }
+  }
+
+  /* -------------------------------------------------------------
+       2. Stack
+       ------------------------------------------------------------- */
+
+  /**
+     * Vertical flex column with uniform spacing between children.
+     * Resets block margins on direct descendants to prevent gap conflicts.
+     */
+  .stack {
+    @apply flex flex-col;
+    gap: var(--layout-gap, calc(var(--spacing) * 5));
+
+    > * {
+      @apply my-0;
+    }
+  }
+
+  /* -------------------------------------------------------------
+       3. Cluster
+       ------------------------------------------------------------- */
+
+  /**
+     * Horizontal flex layout that wraps items automatically with centered alignment.
+     * Ideal for tag lists, button groups, and metadata rows.
+     */
+  .cluster {
+    @apply flex flex-wrap items-center;
+    gap: var(--layout-gap, calc(var(--spacing) * 3));
+  }
+
+  /* -------------------------------------------------------------
+       4. Auto Grid
+       ------------------------------------------------------------- */
+
+  /**
+     * Fluid CSS grid layout fitting as many columns as possible
+     * based on a specified minimum column threshold.
+     */
+  .auto-grid {
+    @apply grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, var(--layout-min, var(--container-3xs))), 1fr)
+    );
+    gap: var(--layout-gap, calc(var(--spacing) * 6));
+  }
+}
+-e 
+
+/* File: src/theme/tokens.css */
+/**
+ * THEME / tokens
+ *
+ * Registers the token names in Tailwind so that the matching utilities exist
+ * (`bg-accent`, `text-muted`, `border-border`, `rounded-control`, ...).
+ *
+ * `@theme static` makes Tailwind emit every token even when no utility uses
+ * it directly; the Blush modules read them through `var()`.
+ *
+ * Values do NOT live here. `unset` is only a placeholder:
+ *   - public tokens are set by each theme       (themes.css)
+ *   - derived tokens are computed by default    (derived.css)
+ *
+ * Only the tokens below are registered. The other derived tokens
+ * (`--color-heading`, the form, choice and range families), the font tokens
+ * `--font-text` / `--font-heading` / `--font-hero`, `--hero-overlay` and
+ * `--icon-*` are plain custom properties read through `var()`: they have no
+ * utility.
+ *
+ * `--font-sans` and `--font-mono` replace Tailwind's default stacks on purpose:
+ * plain system stacks, no emoji families.
+ *
+ * Layer: theme (via Tailwind `@theme`)
+ */
+@theme static {
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  --font-mono:
+    ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+
+  /* Public tokens: every theme sets them. */
+  --color-accent: unset;
+  --color-surface: unset;
+  --color-text: unset;
+  --color-contrast: unset; /* text on top of accent / valid / invalid */
+  --color-invalid: unset;
+  --color-valid: unset;
+  --color-warning: unset;
+  --radius-control: unset;
+
+  /* Derived tokens: computed in derived.css, overridable by any theme. */
+  --color-muted: unset;
+  --color-border: unset;
+  --color-surface-soft: unset;
+  --color-accent-soft: unset;
+}
+-e 
+
+/* File: src/theme/themes.css */
+/**
+ * THEME / themes
+ *
+ * The built-in themes. A theme sets the PUBLIC tokens (required):
+ *   accent, surface, text, contrast, invalid, valid, warning, radius-control
+ *
+ * and may also set any DERIVED token (optional):
+ *   muted, border, surface-soft, accent-soft, heading
+ *   field, field-hover, field-border, field-border-hover, focus-ring,
+ *   valid-ring, invalid-ring, choice-border-hover, choice-check,
+ *   range-track, range-track-hover, range-track-active, range-glow
+ * Derived tokens a theme leaves out use the formulas in derived.css. The
+ * built-in dark, primary and secondary themes set `--color-heading`; light
+ * keeps the default formula.
+ *
+ * Fonts (all optional)
+ * --------------------
+ *   --font-text      page text, buttons and fields (they inherit it). Default: Barlow
+ *   --font-heading   h1-h6; follows --font-text when not set
+ *   --font-hero      h1-h6 inside <header role="banner">. Default: Barlow Condensed
+ *                    (falls back to --font-heading when it does not load)
+ *
+ * A theme only sets the stack: loading the font is up to the page. For the
+ * defaults, add this to the <head> before blush.css:
+ *
+ *   <link rel="preconnect" href="https://fonts.googleapis.com">
+ *   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ *   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+ *
+ * For another font, add its family to the link (or an @font-face to your CSS).
+ *
+ * Hero (<header role="banner"> over an image, see semantic/hero.css; optional)
+ * ---------------------------------------------------------------------------
+ *   --hero-overlay       the whole scrim gradient (linear-gradient: angle and
+ *                        stops). Default in derived.css
+ *
+ * Custom theme (in your own CSS, after blush.css)
+ * -----------------------------------------------
+ * Declare it in `@layer theme`, next to the built-in themes: a theme has the
+ * same specificity as the formulas in derived.css, so source order decides
+ * and your values win. Apply it with `data-theme="sand"` on `<html>` or on
+ * any container; nested themes repaint their own surface and text.
+ *
+ *   @layer theme {
+ *     [data-theme="sand"] {
+ *         --color-accent: oklch(60% 0.12 60);
+ *         --color-surface: oklch(96% 0.02 85);
+ *         --color-text: oklch(25% 0.03 60);
+ *         --color-contrast: oklch(100% 0 0);
+ *         --color-invalid: oklch(55% 0.18 28);
+ *         --color-valid: oklch(51% 0.13 149);
+ *         --color-warning: oklch(51% 0.11 73);
+ *         --radius-control: .3rem;
+ *
+ *         --color-border: oklch(80% 0.03 80);
+ *         --color-field: oklch(98% 0.015 85);
+ *
+ *         --font-heading: "Fraunces", Georgia, serif;
+ *         --font-hero: "Playfair Display", Georgia, serif;
+ *
+ *         --hero-overlay: linear-gradient(90deg, oklch(96% 0.02 85 / .8) 30%, transparent);
+ *     }
+ *   }
+ *
+ * In this example `--color-border` and `--color-field` are hand-picked
+ * derived tokens, `--font-heading` leaves the hero on Barlow Condensed,
+ * `--font-hero` changes only <header role="banner">, `--hero-overlay` replaces
+ * the hero scrim, and every derived token not listed keeps its default formula.
+ *
+ * Layer: theme
+ */
+@layer theme {
+  :root,
+  [data-theme='light'] {
+    --color-accent: oklch(60% 0.16 20);
+    --color-surface: oklch(98.5% 0.008 20);
+    --color-text: oklch(25% 0.03 20);
+    --color-contrast: oklch(100% 0 0);
+    --color-invalid: oklch(55% 0.19 27);
+    --color-valid: oklch(52% 0.13 150);
+    --color-warning: oklch(68% 0.14 70);
+    --color-heading: oklch(20% 0.04 20);
+    --radius-control: 0.6rem;
+    --color-accent-soft: color-mix(
+      in oklch,
+      oklch(60% 0.16 20) 15%,
+      var(--color-surface)
+    );
+  }
+
+  [data-theme='dark'] {
+    --color-accent: oklch(68% 0.15 20);
+    --color-surface: oklch(17% 0.025 20);
+    --color-text: oklch(96% 0.01 20);
+    --color-contrast: oklch(18% 0.02 20);
+    --color-invalid: oklch(71% 0.16 22);
+    --color-valid: oklch(78% 0.14 148);
+    --color-warning: oklch(86% 0.13 85);
+    --color-heading: oklch(92% 0.015 20);
+    --radius-control: 0.6rem;
+    --color-accent-soft: color-mix(
+      in oklch,
+      oklch(68% 0.15 20) 20%,
+      var(--color-surface)
+    );
+  }
+
+  [data-theme='accent'] {
+    --color-accent: oklch(42% 0.1 20);
+    --color-surface: oklch(62% 0.15 20);
+    --color-text: oklch(96% 0.01 20);
+    --color-contrast: oklch(100% 0 0);
+    --color-invalid: oklch(50% 0.18 27);
+    --color-valid: oklch(46% 0.11 150);
+    --color-warning: oklch(50% 0.1 70);
+    --color-heading: oklch(100% 0 0);
+    --radius-control: 0.6rem;
+    --color-accent-soft: color-mix(
+      in oklch,
+      oklch(100% 0 0) 20%,
+      var(--color-surface)
+    );
+  }
+}
+-e 
+
+/* File: src/theme/derived.css */
+/**
+ * THEME / derived
+ *
+ * Default formulas for the derived colors (base, forms, choices, range), the
+ * font stacks, the hero scrim (`--hero-overlay`) and the typographic rhythm
+ * tokens used by semantic/typography.css.
+ *
+ * Why they are declared on `[data-theme]` and not only on `:root`:
+ * a custom property that contains `var()` is resolved on the element that
+ * declares it and inherited already resolved. With nested themes
+ * (`<section data-theme="primary">` inside `<html data-theme="light">`) the
+ * derived values must therefore be recomputed on every element that carries
+ * a `data-theme`.
+ *
+ * How a theme overrides them: declare the variable in themes.css (or in your
+ * own CSS) after this file, with the same specificity. Variables a theme does
+ * not declare keep the formula below, evaluated with the theme's own colors.
+ *
+ * Reads:  --color-accent/surface/text/contrast/valid/invalid, --font-sans
+ * Layer: theme
+ */
+@layer theme {
+  :root,
+  [data-theme] {
+    --color-muted: color-mix(
+      in oklch,
+      var(--color-text) 60%,
+      var(--color-surface)
+    );
+    --color-border: color-mix(
+      in oklch,
+      var(--color-accent) 70%,
+      var(--color-surface)
+    );
+    --color-surface-soft: color-mix(
+      in oklch,
+      var(--color-surface) 92%,
+      var(--color-text)
+    );
+    --color-accent-soft: color-mix(
+      in oklch,
+      var(--color-accent) 30%,
+      var(--color-surface)
+    );
+    /* oklab, not oklch: with white or black text (hue 0, chroma 0) hue
+           interpolation would drift towards purple. */
+    --color-heading: color-mix(
+      in oklab,
+      var(--color-accent) 25%,
+      var(--color-text)
+    );
+
+    /* --- Forms: text fields, select, textarea --- */
+    --color-field: color-mix(
+      in oklch,
+      var(--color-accent) 4%,
+      var(--color-surface)
+    );
+    --color-field-hover: color-mix(
+      in oklch,
+      var(--color-accent) 7%,
+      var(--color-surface)
+    );
+    --color-field-border: color-mix(
+      in oklch,
+      var(--color-accent) 25%,
+      var(--color-border)
+    );
+    --color-field-border-hover: color-mix(
+      in oklch,
+      var(--color-accent) 45%,
+      var(--color-border)
+    );
+    --color-focus-ring: color-mix(
+      in oklch,
+      var(--color-accent) 20%,
+      transparent
+    );
+    --color-valid-ring: color-mix(
+      in oklch,
+      var(--color-valid) 20%,
+      transparent
+    );
+    --color-invalid-ring: color-mix(
+      in oklch,
+      var(--color-invalid) 20%,
+      transparent
+    );
+
+    /* --- Forms: checkbox, radio, switch --- */
+    --color-choice-border-hover: color-mix(
+      in oklch,
+      var(--color-text) 40%,
+      var(--color-surface)
+    );
+    /* The mark sits on top of the accent, like button text. */
+    --color-choice-check: var(--color-contrast);
+
+    /* --- Forms: range (glow = thumb shadow on hover + focus ring) --- */
+    --color-range-track: color-mix(
+      in oklch,
+      var(--color-accent) 15%,
+      var(--color-surface-soft)
+    );
+    --color-range-track-hover: color-mix(
+      in oklch,
+      var(--color-accent) 25%,
+      var(--color-surface-soft)
+    );
+    --color-range-track-active: color-mix(
+      in oklch,
+      var(--color-accent) 30%,
+      var(--color-surface-soft)
+    );
+    --color-range-glow: color-mix(
+      in oklch,
+      var(--color-accent) 35%,
+      transparent
+    );
+
+    --font-text: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    --font-heading: var(--font-text);
+    --font-hero: var(--font-heading);
+    --hero-overlay: linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--color-surface) 80%, transparent) 30%,
+      color-mix(in oklch, var(--color-surface) 20%, transparent) 100%
+    );
+  }
+
+  /* Typography rhythm: set once on :root (see semantic/typography.css). */
+  :root {
+    --typography-spacing-vertical: 1.25em;
+    --typography-spacing-top: 2em;
+  }
+}
+-e 
+
+/* File: src/theme/icons.css */
+/**
+ * THEME / icons
+ *
+ * SVG icons as data-URIs: select chevron, validation marks, search, date,
+ * time and the busy spinner.
+ *
+ * Fixed colors are limited to what cannot read a token: the valid / invalid
+ * strokes here, and the `%23000` mask shapes in forms/choices.css (painted
+ * with `--color-choice-check`). The other exception is `black` as the
+ * darkening mix in `color-mix()` (button and link hover, `pre` background).
+ *
+ * These fixed colors are the one documented exception to the rule against
+ * hardcoded colors.
+ *
+ * Layer: theme
+ */
+@layer theme {
+  :root,
+  [data-theme] {
+    --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-opacity='0.5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 6 8 10 12 6'/%3E%3C/svg%3E");
+    --icon-valid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%233a9d5d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3.75 9 6.5 11.75 12.25 4.75'/%3E%3C/svg%3E");
+    --icon-invalid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23e0574f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cline x1='8' y1='5' x2='8' y2='9'/%3E%3Ccircle cx='8' cy='12' r='0.5' fill='%23e0574f'/%3E%3C/svg%3E");
+    --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='2' stroke-opacity='0.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cline x1='10.25' y1='10.25' x2='14' y2='14'/%3E%3C/svg%3E");
+    --icon-date: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='2' stroke-opacity='0.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='3' width='12' height='11' rx='2'/%3E%3Cpath d='M5 1v3M11 1v3M2 7h12'/%3E%3C/svg%3E");
+    --icon-time: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='2' stroke-opacity='0.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpolyline points='8 4 8 8 10.5 10.5'/%3E%3C/svg%3E");
+    --icon-loading: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-6.219-8.56'/%3E%3C/svg%3E");
+  }
+}
+-e 
+
+/* File: src/blush.css */
+@import 'tailwindcss' source(none);
+
+/**
+ * Blush CSS - entry point
+ *
+ * Beautiful by default. Powerful by utility.
+ *
+ * Blush is a classless CSS framework built on Tailwind CSS v4 (`@apply`).
+ * Write semantic HTML and it looks right; reach for a class only when you
+ * want to change how something looks.
+ *
+ * Architecture
+ * ------------
+ * Four cascade layers, from lowest to highest priority (the order is the one
+ * declared by Tailwind itself):
+ *
+ *   theme       design tokens only (colors, radius, fonts, icons)
+ *   base        reboot: page background, selection, nested themes
+ *   components  SEMANTIC styles: native elements, `role` and `aria-*` states.
+ *               No classes are required, none are used as selectors.
+ *   utilities   OPT-IN classes: tones, outlined buttons, media overlays, layout.
+ *
+ * The one rule behind the split:
+ *
+ *   Attributes (`aria-*`, `role`, `data-theme`) say what something IS or what
+ *   state it is in. Classes say how you want it to LOOK.
+ *
+ * Because utilities live in the highest layer they always win over semantic
+ * styles, without `!important` and without specificity wars.
+ *
+ * Public API
+ * ----------
+ *   Elements    typography, tables, forms, buttons, main, article, aside,
+ *               nav, details, dialog, menu, progress, meter, figure, iframe
+ *   Roles       role="button" | "group" | "switch" | "link" | "banner" (hero) |
+ *               "region" (dialog banner) | "menu" | "menuitem" | "tab" |
+ *               "option" | "treeitem" | "alert" | "status"
+ ...
+ *   Classes     .positive .negative .warning         (tone)
+ *               .muted .accent                       (neutral / filled button surface)
+ *               .outlined                            (button shape)
+ *               .cover .overlay .overlay-<position>  (media)
+ *               .wrapper .wrapper.wide .stack .cluster .auto-grid  (layout)
+ * Bundling
+ * --------
+ * Modules are mostly independent: for a smaller bundle copy this file and
+ * comment out the imports you do not need. Keep these links in mind:
+ *   - theme/* is always required: every module reads its tokens.
+ *   - hero.css reads `--hero-overlay` (derived.css).
+ *   - group.css expects buttons.css and forms/fields.css for the elements it holds.
+ *   - `.outlined`, `.muted` and `.accent` drive the `--btn-*` variables of
+ *     semantic/buttons.css.
+ * Order matters: inside a layer the last declaration wins at equal specificity.
+ *
+ * Tailwind sources
+ * ----------------
+ * `source(none)` makes the build scan nothing but Blush itself, so the bundle
+ * carries no Tailwind utility you did not ask for. To use Tailwind classes in
+ * your own markup, add `@source "<path to your templates>"` in your entry CSS. */
+
+/* 1. THEME - tokens, derived defaults, themes, icons */
+@import './theme/tokens.css';
+@import './theme/derived.css';
+@import './theme/themes.css';
+@import './theme/icons.css';
+
+/* 2. BASE - reboot */
+@import './base/reboot.css';
+
+/* 3. SEMANTIC - classless styles for elements, roles and ARIA states */
+@import './semantic/hero.css';
+@import './semantic/typography.css';
+@import './semantic/layout.css';
+@import './semantic/media.css';
+@import './semantic/data.css';
+@import './semantic/buttons.css';
+@import './semantic/forms/fields.css';
+@import './semantic/forms/choices.css';
+@import './semantic/forms/range.css';
+@import './semantic/group.css';
+@import './semantic/containers.css';
+@import './semantic/feedback.css';
+@import './semantic/busy.css';
+
+/* 4. UTILITIES - opt-in classes */
+@import './utilities/tone.css';
+@import './utilities/outlined.css';
+@import './utilities/media.css';
+@import './utilities/layout.css';
+-e 
+
+/* File: src/base/reboot.css */
+/**
+ * BASE / reboot
+ *
+ * Page-level defaults: font assignment, fluid root font size, page colors,
+ * text rendering (antialiasing, hanging punctuation, tabular numerals), a
+ * consistent bold weight, sub / sup, selection and the background of nested
+ * themes.
+ *
+ * Reads:  --font-text, --font-sans, --color-surface/text/accent/contrast
+ * Layer:  base
+ */
+@layer base {
+  /* The page font. Buttons and fields inherit it. */
+  html,
+  body,
+  [data-theme] {
+    font-family: var(--font-text, var(--font-sans));
+  }
+
+  html {
+    @apply bg-[color:var(--color-surface)] text-[color:var(--color-text)] antialiased;
+    font-size: clamp(12px, 0.7rem + 0.5vw, 1.15rem);
+    hanging-punctuation: first last;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply leading-relaxed;
+    font-variant-numeric: proportional-nums tabular-nums;
+  }
+
+  /* Consistent bold weight across Chrome, Safari and Firefox. */
+  b,
+  strong {
+    font-weight: 700;
+  }
+
+  /* Sub and sup without disturbing the line height. */
+  sub,
+  sup {
+    position: relative;
+    font-size: 0.75em;
+    line-height: 0;
+    vertical-align: baseline;
+  }
+  sub {
+    bottom: -0.25em;
+  }
+  sup {
+    top: -0.5em;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-contrast);
+  }
+
+  /* Nested themes paint their own surface and text color. */
+  [data-theme] {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+}
+-e 
+
+/* File: src/semantic/media.css */
+/**
+ * SEMANTIC / media
+ *
+ * Embedded content: `figure` and `figcaption`, `picture`, `iframe` and
+ * `embed`. No classes are needed.
+ *
+ * `img` and `video` are already reset by Tailwind's preflight (`display: block`,
+ * `max-width: 100%`, `height: auto`), so they are not repeated here.
+ *
+ *   figure      block without the browser's side margins
+ *   figcaption  small, muted, centered text below the media; above it when it
+ *               is the first child
+ *   picture     block, never wider than its parent
+ *   iframe,     full width, a default 16:9 ratio to avoid layout shift, and a
+ *   embed       discreet border. A `height` attribute or style wins over the
+ *               ratio, because Blush never sets `height` here.
+ *
+ * Not to be confused with utilities/media.css, which stacks content over media
+ * (`.cover`, `.overlay`).
+ *
+ * Reads:  --color-text/muted/surface, --radius-control
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Figure and caption
+       ------------------------------------------------------------- */
+    figure {
+        display: block;
+        margin-inline: 0;
+
+        figcaption {
+            padding-block-start: 0.5em;
+            font-size: 0.875em;
+            color: var(--color-muted);
+            text-align: center;
+            text-wrap: balance;
+
+            /* A caption placed before the media sits above it. */
+            &:first-child {
+                padding-block: 0 0.5em;
+            }
+        }
+    }
+
+    /* -------------------------------------------------------------
+       2. Picture
+       ------------------------------------------------------------- */
+    picture {
+        display: block;
+        max-width: 100%;
+    }
+
+    /* -------------------------------------------------------------
+       3. Iframe and embed
+       ------------------------------------------------------------- */
+    iframe,
+    embed {
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: 16 / 9;
+        border: 1px solid color-mix(in oklch, var(--color-text) 15%, var(--color-surface));
+        border-radius: var(--radius-control);
+    }
+}
+-e 
+
+/* File: src/semantic/feedback.css */
+/**
+ * SEMANTIC / feedback
+ *
+ * Visual feedback driven by accessible states. The state is what the
+ * assistive technology reads; here it is also what styles the element, so no
+ * class is involved.
+ *
+ *   aria-disabled="true"            dimmed, inert (elements buttons.css and
+ *                                   forms/fields.css do not already cover)
+ *   aria-expanded="true"            the trailing icon of a button turns upside down
+ *   aria-selected="true" |          highlighted tab, option, menu item, list
+ *   aria-current                    item or row (buttons keep their own ring)
+ *   role="alert" | "status"         notice box, colored by the current tone
+ *
+ * Variable contract
+ * -----------------
+ *   --feedback-tone   color of a notice. Defaults to `--tone`, then to the
+ *                     invalid color for role="alert" and the accent for
+ *                     role="status". `.positive`, `.warning` and `.negative`
+ *                     (utilities/tone.css) change it without knowing this file.
+ *
+ * Usage
+ *   <p role="alert">The payment failed.</p>
+ *   <p role="status" class="positive">Saved.</p>
+ *   <button aria-expanded="true">Options <svg>...</svg></button>
+ *
+ * Deliberately not here
+ *   - `disabled`, and `aria-disabled` on buttons and fields: buttons.css and
+ *     forms/fields.css.
+ *   - `[hidden]`: Tailwind's preflight already sets `display: none !important`,
+ *     and Blush does not use `!important`.
+ *   - `[aria-hidden="true"]`: it only removes an element from the accessibility
+ *     tree. Decorative icons are often visible, so hiding them would break the page.
+ *   - `[aria-live]` alone: a live region announces, it does not need a box. Only
+ *     `role="alert"` and `role="status"` get one.
+ *
+ * Reads:  --color-text/accent/invalid/surface/heading, --radius-control
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Disabled: items outside buttons and fields
+       ------------------------------------------------------------- */
+    :is(a, summary, [role="tab"], [role="menuitem"], [role="option"]):not(button, [role="button"])[aria-disabled="true"] {
+        @apply opacity-50 pointer-events-none cursor-not-allowed;
+    }
+
+    /* -------------------------------------------------------------
+       2. Expanded: the trailing icon turns upside down
+          Only an icon that follows other content, so an icon-only button
+          does not spin.
+       ------------------------------------------------------------- */
+    :is(button, [role="button"], a)[aria-expanded] > svg:last-child:not(:first-child) {
+        transition: transform 150ms ease;
+    }
+
+    :is(button, [role="button"], a)[aria-expanded="true"] > svg:last-child:not(:first-child) {
+        transform: rotate(180deg);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        :is(button, [role="button"], a)[aria-expanded] > svg:last-child:not(:first-child) {
+            transition: none;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       3. Selected and current: tabs, options, menu items, list items, rows
+       ------------------------------------------------------------- */
+    :is([role="tab"], [role="option"], [role="menuitem"], [role="treeitem"], li, tr):not(button, [role="button"]):is(
+        [aria-selected="true"],
+        [aria-current]:not([aria-current="false"])
+    ) {
+        color: var(--color-heading);
+        background-color: color-mix(in oklch, var(--color-accent) 12%, transparent);
+    }
+
+    /* -------------------------------------------------------------
+       4. Notices: role="alert" and role="status"
+       ------------------------------------------------------------- */
+    [role="status"] {
+        --feedback-tone: var(--tone, var(--color-accent));
+    }
+
+    [role="alert"] {
+        --feedback-tone: var(--tone, var(--color-invalid));
+    }
+
+    :is([role="alert"], [role="status"]) {
+        @apply mb-4 px-4 py-3;
+        color: var(--color-text);
+        background-color: color-mix(in oklch, var(--feedback-tone) 8%, var(--color-surface));
+        border: 1px solid color-mix(in oklch, var(--feedback-tone) 35%, var(--color-surface));
+        border-inline-start: 4px solid var(--feedback-tone);
+        border-radius: var(--radius-control);
+    }
+
+    :is([role="alert"], [role="status"]) > :first-child {
+        margin-block-start: 0;
+    }
+
+    :is([role="alert"], [role="status"]) > :last-child {
+        margin-block-end: 0;
+    }
+
+    /* A live region is often in the page before it has anything to say: it
+       must stay in the accessibility tree, so it is emptied visually, not hidden. */
+    :is([role="alert"], [role="status"]):empty {
+        @apply m-0 p-0;
+        background: none;
+        border: 0;
+    }
+}
+-e 
+
+/* File: src/semantic/buttons.css */
+/**
+ * SEMANTIC / buttons
+ *
+ * Styles `button`, `[role="button"]`, `input[type=submit|button|reset]` and
+ * the native file selector. No classes are needed: a plain button is a
+ * filled accent button.
+ *
+ * Variable contract
+ * -----------------
+ * Every color of a button is read from a few custom properties set on the
+ * button itself. They are the hooks the utilities use to change the look
+ * without knowing anything about this file's selectors:
+ *
+ *   --btn-tone          base color. Defaults to `--tone`, then to the accent.
+ *   --btn-bg            fill
+ *   --btn-fg            text
+ *   --btn-border        border
+ *   --btn-bg-hover      fill on hover: the base tone darkened by 12% (mixed with black)
+ *   --btn-border-hover  border on hover
+ *   --btn-ring          keyboard focus outline
+ *
+ * `--tone` is set by .positive / .negative / .warning (utilities/tone.css);
+ * the shape comes from .outlined (utilities/outlined.css). Because both only
+ * assign variables they compose in any order: `class="outlined positive"`.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   aria-pressed="true" | aria-selected="true" | aria-current   highlighted ring
+ *   disabled | aria-disabled="true" | fieldset[disabled]        dimmed, inert
+ *   aria-busy="true"                                              see busy.css
+ *
+ * Primary and secondary actions
+ * ------------------------------
+ * A form has one primary action: the submit button, which stays filled with
+ * the accent. Every other button is a secondary action and gets the neutral
+ * (muted) surface by default:
+ *
+ *   - `input[type=reset]` and the file selector, anywhere
+ *   - inside a `<form>`: `button[type=button]`, `button[type=reset]`,
+ *     `input[type=button]` and `[role=button]` (e.g. a "Cancel" link)
+ *
+ * A `<button>` without a `type` attribute is a submit button by the HTML
+ * specification, so it stays filled. To fill a neutral button with the
+ * current tone, add `.accent` (utilities/tone.css).
+ *
+ * Reads:  --tone, --color-accent/contrast/text/surface, --radius-control
+ * Inside [role="group"] the layout is handled by group.css.
+ * Layer:  components
+ */
+@layer components {
+  /* -------------------------------------------------------------
+       1. Base: filled button in the current tone
+       ------------------------------------------------------------- */
+  button,
+  [role='button'],
+  input[type='submit'],
+  input[type='button'],
+  input[type='reset'],
+  input[type='file']::file-selector-button {
+    --btn-tone: var(--tone, var(--color-accent));
+    --btn-bg: var(--btn-tone);
+    --btn-fg: var(--color-contrast);
+    --btn-border: var(--btn-tone);
+    --btn-bg-hover: color-mix(in oklch, var(--btn-tone) 88%, black);
+    --btn-border-hover: var(--btn-bg-hover);
+    --btn-ring: color-mix(in oklch, var(--btn-tone) 35%, transparent);
+
+    @apply inline-flex items-center justify-center gap-2
+            m-0 min-h-11 px-5 py-2.5
+            rounded-[var(--radius-control)]
+            font-semibold text-base leading-normal text-center select-none no-underline
+            cursor-pointer transition-all duration-150 ease-out shadow-xs
+
+            bg-[color:var(--btn-bg)] text-[color:var(--btn-fg)] border border-[color:var(--btn-border)]
+
+            hover:bg-[color:var(--btn-bg-hover)] hover:border-[color:var(--btn-border-hover)]
+            hover:shadow-sm
+            active:scale-[0.98] active:brightness-90
+
+            focus-visible:outline-3 focus-visible:outline-offset-2
+            focus-visible:outline-[color:var(--btn-ring)];
+  }
+
+  /* The native file selector sits next to the file name. */
+  input[type='file']::file-selector-button {
+    @apply me-4 rounded-[calc(var(--radius-control)-2px)];
+  }
+
+  /* A nested `&:hover` cannot target a pseudo-element, so the hover state of
+       the file selector is stated explicitly. */
+  input[type='file']::file-selector-button:hover {
+    background-color: var(--btn-bg-hover);
+    border-color: var(--btn-border-hover);
+  }
+
+  /* -------------------------------------------------------------
+       2. Neutral surface for secondary actions: reset, file selector and
+          every non-submit button inside a form. The same set of --btn-*
+          variables backs the .muted utility; .accent turns them back into tone-filled
+          buttons.
+       ------------------------------------------------------------- */
+  input[type='reset'],
+  input[type='file']::file-selector-button,
+  form
+    :is(
+      button[type='button'],
+      button[type='reset'],
+      input[type='button'],
+      [role='button']
+    ) {
+    --btn-bg: color-mix(in oklch, var(--color-text) 8%, var(--color-surface));
+    --btn-fg: var(--color-text);
+    --btn-border: color-mix(
+      in oklch,
+      var(--color-text) 20%,
+      var(--color-surface)
+    );
+    --btn-bg-hover: color-mix(
+      in oklch,
+      var(--color-text) 15%,
+      var(--color-surface)
+    );
+    --btn-border-hover: color-mix(
+      in oklch,
+      var(--color-text) 30%,
+      var(--color-surface)
+    );
+    --btn-ring: color-mix(in oklch, var(--color-text) 25%, transparent);
+  }
+
+  /* -------------------------------------------------------------
+       3. ARIA states: pressed, selected, current
+       ------------------------------------------------------------- */
+  :is(button, [role='button'])[aria-pressed='true'],
+  :is(button, [role='button'])[aria-selected='true'],
+  :is(button, [role='button']):is([aria-current]:not([aria-current='false'])) {
+    --tw-ring-offset-color: var(--color-surface);
+    @apply brightness-90 ring-2 ring-[color:var(--btn-tone)] ring-offset-2;
+  }
+
+  /* -------------------------------------------------------------
+       4. Disabled: native, ARIA and inherited from a fieldset
+       ------------------------------------------------------------- */
+  button:disabled,
+  input:disabled,
+  [role='button'][aria-disabled='true'],
+  [aria-disabled='true'] :is(button, [role='button'], input),
+  fieldset[disabled] :is(button, [role='button'], input) {
+    @apply opacity-50 pointer-events-none cursor-not-allowed shadow-none
+            scale-100 filter-none;
+  }
+
+  /* -------------------------------------------------------------
+       5. Inline SVG icons follow the text size
+       ------------------------------------------------------------- */
+  :is(button, [role='button']) > svg {
+    flex-shrink: 0;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+  }
+}
+-e 
+
+/* File: src/semantic/containers.css */
+/**
+ * SEMANTIC / containers
+ *
+ * Native interactive containers: `details` / `summary` (accordion), `dialog`
+ * (modal) and `menu` (action bar or context menu). No classes are needed.
+ *
+ *   details       bordered block; the summary is a full-width row with a
+ *                 chevron that turns when the block is open
+ *   dialog        centered card; blurred, translucent `::backdrop`; fast
+ *                 fade and slide entrance/exit; page scroll lock on modal
+ *   dialog[role="region"]
+ *                 toast/banner variant (e.g. cookie banner); fixed at bottom
+ *                 right (full width on mobile), fast slide-up/slide-down, no backdrop
+ *   menu          a row of quick actions; with role="menu" a vertical panel
+ *                 whose items are plain, tinted on hover
+ *
+ *   dialog > footer
+ *                 actions row, right-aligned, at the end of the dialog
+ *
+ * Motion: `details` animates only under `prefers-reduced-motion: no-preference`;
+ * under `reduce` every dialog transition drops to near zero.
+ *
+ * Dials (all optional)
+ *   --dialog-width   max width of a dialog (default 32rem)
+ *
+ * Reads:  --color-text/accent/surface/field-border, --icon-chevron,
+ *         --radius-control, --typography-spacing-vertical
+ * Layer:  components
+ */
+@layer components {
+  /* -------------------------------------------------------------
+       1. Details and summary
+       ------------------------------------------------------------- */
+  details {
+    @apply mb-4;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-field-border);
+    border-radius: var(--radius-control);
+  }
+
+  details > summary {
+    @apply flex min-h-11 cursor-pointer select-none items-center justify-between gap-3 px-4 py-2.5
+            font-semibold list-none
+            transition-colors duration-150;
+    border-radius: inherit;
+
+    /* Safari still draws its own marker. */
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    /* The chevron is a mask, so it follows the text color. */
+    &::after {
+      @apply flex-shrink-0 h-[1em] w-[1em] bg-current content-[''];
+      background-image: none;
+      -webkit-mask: var(--icon-chevron) center / contain no-repeat;
+      mask: var(--icon-chevron) center / contain no-repeat;
+      transition: transform 150ms ease;
+    }
+
+    &:hover {
+      background-color: color-mix(
+        in oklch,
+        var(--color-accent) 6%,
+        transparent
+      );
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: -2px;
+    }
+  }
+
+  details[open] > summary {
+    border-bottom: 1px solid var(--color-field-border);
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+
+    &::after {
+      transform: rotate(180deg);
+    }
+  }
+
+  /* The expanded content sits inside the box, with the summary's gutters. */
+  details > summary ~ * {
+    max-width: calc(100% - 2rem);
+    margin-inline: 1rem;
+  }
+
+  details > summary + * {
+    margin-block-start: 0.75rem;
+  }
+
+  details > summary ~ :last-child {
+    margin-block-end: 1rem;
+  }
+
+  /* Smooth open and close where the browser can animate the content box. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports selector(details::details-content) {
+      details {
+        interpolate-size: allow-keywords;
+      }
+
+      details::details-content {
+        block-size: 0;
+        overflow-y: clip;
+        transition:
+          block-size 250ms ease,
+          content-visibility 250ms ease allow-discrete;
+      }
+
+      details[open]::details-content {
+        block-size: auto;
+      }
+    }
+  }
+
+  /* -------------------------------------------------------------
+       2. Dialog (Base & Modal)
+       ------------------------------------------------------------- */
+  dialog {
+    @apply m-auto w-full overflow-auto p-6 rounded-2xl shadow-2xl;
+    max-width: min(100% - 2rem, var(--dialog-width, 32rem));
+    max-height: calc(100dvh - 2rem);
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-field-border);
+
+    /* Closed state: slight slide down & fade */
+    opacity: 0;
+    transform: translateY(1rem);
+
+    /* Fast transition in and out (180ms ease-out) */
+    transition:
+      opacity 180ms ease-out,
+      transform 180ms ease-out,
+      overlay 180ms ease-out allow-discrete,
+      display 180ms ease-out allow-discrete;
+
+    &::backdrop {
+      opacity: 0;
+      background-color: color-mix(in oklch, var(--color-text) 35%, transparent);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      transition:
+        opacity 180ms ease-out,
+        overlay 180ms ease-out allow-discrete,
+        display 180ms ease-out allow-discrete;
+    }
+
+    &[open] {
+      opacity: 1;
+      transform: translateY(0);
+
+      &::backdrop {
+        opacity: 1;
+      }
+
+      @starting-style {
+        opacity: 0;
+        transform: translateY(1rem);
+
+        &::backdrop {
+          opacity: 0;
+        }
+      }
+    }
+  }
+
+  /* -------------------------------------------------------------
+       2b. Dialog variant: role="region" (Fast Bottom Slide Banner / Cookie Banner)
+       ------------------------------------------------------------- */
+  dialog[role='region'] {
+    /* Positioned fixed at the bottom:
+           - Mobile: full width attached to bottom
+           - Desktop: anchored at bottom-right */
+    position: fixed;
+    inset-block-end: 0;
+    inset-block-start: auto;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    z-index: 50;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
+
+    @apply shadow-2xl
+               sm:bottom-4 sm:right-4 sm:left-auto sm:w-auto sm:max-w-md sm:rounded-2xl sm:border;
+
+    /* Closed state: hidden completely off-screen at the bottom */
+    opacity: 0;
+    transform: translateY(100%);
+
+    /* Slide in / out: 250ms on a snappy ease-out curve. */
+    transition:
+      opacity 250ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+      overlay 250ms cubic-bezier(0.16, 1, 0.3, 1) allow-discrete,
+      display 250ms cubic-bezier(0.16, 1, 0.3, 1) allow-discrete;
+
+    &[open] {
+      opacity: 1;
+      transform: translateY(0);
+
+      @starting-style {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+    }
+  }
+
+  /* Reduced motion: the block repeats the selectors of the rules it tones
+       down and comes after them, so equal specificity and source order decide
+       it, with no !important. */
+  @media (prefers-reduced-motion: reduce) {
+    dialog,
+    dialog[role='region'],
+    dialog::backdrop {
+      transition-duration: 0.01ms;
+    }
+  }
+
+  /* A modal dialog freezes the page behind it. */
+  body:has(dialog:modal) {
+    overflow: hidden;
+  }
+
+  dialog > :first-child {
+    margin-block-start: 0;
+  }
+
+  dialog > :last-child {
+    margin-block-end: 0;
+  }
+
+  /* Actions row, at the end of the dialog. */
+  dialog > footer {
+    @apply mt-6 flex flex-wrap justify-end gap-3;
+  }
+
+  /* -------------------------------------------------------------
+       3. Menu
+          A row of quick actions by default; a vertical panel with role="menu".
+       ------------------------------------------------------------- */
+  menu {
+    @apply flex flex-wrap items-center gap-2 p-0 list-none;
+  }
+
+  /* A popover keeps the browser's own margins, so it can be positioned. */
+  menu:not([popover]) {
+    margin: var(--typography-spacing-vertical);
+    margin-inline: 0;
+  }
+
+  menu > li {
+    @apply m-0 list-none;
+  }
+
+  menu[role='menu'] {
+    @apply w-fit min-w-48 flex-col flex-nowrap items-stretch gap-0.5 p-1 shadow-lg;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-field-border);
+    border-radius: var(--radius-control);
+  }
+
+  menu[role='menu'] :is(button, a, [role='menuitem']) {
+    --btn-bg: transparent;
+    --btn-fg: var(--color-text);
+    --btn-border: transparent;
+    --btn-bg-hover: color-mix(in oklch, var(--color-accent) 12%, transparent);
+    --btn-border-hover: transparent;
+
+    @apply flex min-h-9 w-full items-center justify-start gap-2 px-3 py-1.5
+            font-normal text-start no-underline shadow-none;
+    color: var(--color-text);
+  }
+
+  /* Only buttons read --btn-*; links and other items get the same tint directly. */
+  menu[role='menu']
+    :is(a, [role='menuitem']):not(button, [role='button']):is(
+      :hover,
+      :focus-visible
+    ) {
+    background-color: color-mix(in oklch, var(--color-accent) 12%, transparent);
+  }
+}
+-e 
+
+/* File: src/semantic/group.css */
+/**
+ * SEMANTIC / group
+ *
+ * `[role="group"]`: buttons, inputs and selects fused into a single bar
+ * (stepper, input + button, segmented control), and `fieldset[role="group"]`
+ * for controls on one row.
+ *
+ *   <div role="group">
+ *     <button aria-label="Decrease">-</button>
+ *     <input type="number" value="1">
+ *     <button aria-label="Increase">+</button>
+ *   </div>
+ *
+ * The stepper is recognised by structure, not by a class: a button that sits
+ * next to a number input gets the compact square sizing.
+ *
+ * Semantic states (no class involved)
+ *   aria-pressed="true" | aria-selected="true" | aria-current   inset ring on the child
+ *   :focus-visible                                               the child rises above its neighbors
+ *
+ * Reads:  --color-accent/surface, --radius-control
+ * Depends on buttons.css and forms/fields.css only for the elements it holds.
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Container
+       ------------------------------------------------------------- */
+    [role="group"] {
+        @apply inline-flex items-center rounded-[var(--radius-control)];
+    }
+
+    /* -------------------------------------------------------------
+       2. Children: square corners except at the ends; borders are shared (1px)
+       ------------------------------------------------------------- */
+    [role="group"] > :is(button, [role="button"], input, select) {
+        @apply relative rounded-none first:rounded-s-[var(--radius-control)] last:rounded-e-[var(--radius-control)];
+    }
+
+    [role="group"] > :not(:first-child) {
+        margin-inline-start: -1px;
+    }
+
+    /* No bottom margin and a uniform height (fields carry mb-4 and min-h-11). */
+    [role="group"] > input:not([type="checkbox"], [type="radio"]),
+    [role="group"] > select,
+    [role="group"] > button,
+    [role="group"] > [role="button"] {
+        @apply mb-0 min-h-11 h-full;
+    }
+
+    /* -------------------------------------------------------------
+       3. States: the focused or active child sits above its neighbors' borders
+       ------------------------------------------------------------- */
+    [role="group"] > :is(button, [role="button"], input):focus-visible {
+        @apply z-20;
+    }
+
+    [role="group"] > :is(button, [role="button"]):is(
+        [aria-pressed="true"],
+        [aria-selected="true"],
+        [aria-current]:not([aria-current="false"])
+    ) {
+        /* An inset ring highlights the child without breaking the shared divider. */
+        @apply z-10 brightness-95 ring-2 ring-[color:var(--color-accent)] ring-inset ring-offset-0;
+    }
+
+    /* -------------------------------------------------------------
+       4. Stepper: [-] [number] [+]
+       ------------------------------------------------------------- */
+    [role="group"] > input[type="number"] {
+        @apply text-center font-semibold px-2 w-16 shrink-0 rounded-none m-0 py-2.5 min-h-11 box-border;
+
+        /* Same height as the buttons; the side borders come from the buttons. */
+        align-self: stretch;
+        height: auto;
+        border-left: 0;
+        border-right: 0;
+
+        /* Top and bottom borders match the accent outline of the buttons. */
+        border-top: 1px solid var(--color-accent);
+        border-bottom: 1px solid var(--color-accent);
+        background-color: color-mix(in oklch, var(--color-accent) 4%, var(--color-surface));
+    }
+
+    /* Stepper buttons: the ones right before or right after a number input. */
+    [role="group"] > button:has(+ input[type="number"]),
+    [role="group"] > input[type="number"] + button {
+        @apply px-3.5 font-bold min-w-11 inline-flex items-center justify-center self-stretch h-auto;
+    }
+
+    /* -------------------------------------------------------------
+       5. fieldset[role="group"]: controls on one row
+       ------------------------------------------------------------- */
+    fieldset[role="group"] {
+        @apply flex-row flex-wrap items-center gap-6;
+    }
+}
+-e 
+
+/* File: src/semantic/busy.css */
+/**
+ * SEMANTIC / busy
+ *
+ * The busy state, driven by `aria-busy="true"`. There is no loading class:
+ * setting the attribute is what tells assistive technology, and it is also
+ * what styles the element.
+ *
+ *   Inline elements (button, a, span, ...)   a spinner before the content,
+ *                                            the element becomes inert
+ *   Containers (form, fieldset, div, ...)    a translucent veil with blur, a centered
+ *                                            spinner, and smooth fade-in/out transitions
+ *
+ * Dials (all optional)
+ *   --busy-size   spinner size in a container (default 2rem)
+ *   --busy-blur   veil blur radius (default .8px)
+ *   --busy-transition-duration  duration for overlay fade transition (default 200ms)
+ *
+ * Under `prefers-reduced-motion` the spinner turns slower instead of
+ * stopping, and transition durations are minimized.
+ *
+ * Reads:  --icon-loading, --color-surface, --color-accent
+ * Layer:  components
+ */
+@layer components {
+
+    @keyframes busy-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* -------------------------------------------------------------
+       1. Inline elements: spinner before content
+       ------------------------------------------------------------- */
+
+    /**
+     * Styles non-container elements in busy state.
+     * Appends a spinning mask icon directly before element text/content.
+     */
+    [aria-busy="true"]:not(
+        :is(form, fieldset, div, section, article, aside, main, nav, table, ul, ol, dl,
+            figure, details, blockquote, pre, input, select, textarea, html, body)
+    ) {
+        @apply pointer-events-none select-none whitespace-nowrap opacity-80;
+
+        &::before {
+            @apply inline-block shrink-0 h-[1em] w-[1em] align-[-0.125em] bg-current content-[''];
+            background-image: none;
+            -webkit-mask: var(--icon-loading) center / contain no-repeat;
+            mask: var(--icon-loading) center / contain no-repeat;
+            animation: busy-spin 0.75s linear infinite;
+        }
+
+        &:not(:empty)::before {
+            @apply me-2;
+        }
+
+        &:empty {
+            @apply inline-flex items-center justify-center text-center;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       2. Containers: translucent veil with blur, centered spinner & fade transitions
+       ------------------------------------------------------------- */
+
+    /**
+     * Base container selection: defines overlay pseudo-elements with opacity: 0
+     * to support smooth transition-in and transition-out effects when aria-busy changes.
+     */
+    :is(form, fieldset, div, section, article, aside, main, nav, table, ul, ol, dl,
+        figure, details, blockquote, pre) {
+        
+        /* Backdrop veil element */
+        &::before {
+            @apply absolute inset-0 z-10 block h-auto w-auto m-0 rounded-[inherit] pointer-events-none opacity-0 invisible content-[''];
+            transition: opacity var(--busy-transition-duration, 200ms) ease-in-out,
+                        visibility var(--busy-transition-duration, 200ms) ease-in-out;
+            -webkit-mask: none;
+            mask: none;
+            animation: none;
+            background: color-mix(in oklch, var(--color-surface) 90%, transparent);
+            -webkit-backdrop-filter: blur(var(--busy-blur, 0.8px));
+            backdrop-filter: blur(var(--busy-blur, 0.8px));
+        }
+
+        /* Centered loading spinner */
+        &::after {
+            @apply absolute top-1/2 left-1/2 z-11 pointer-events-none opacity-0 invisible content-[''];
+            transition: opacity var(--busy-transition-duration, 200ms) ease-in-out,
+                        visibility var(--busy-transition-duration, 200ms) ease-in-out;
+            width: var(--busy-size, 2rem);
+            height: var(--busy-size, 2rem);
+            margin-top: calc(var(--busy-size, 2rem) / -2);
+            margin-left: calc(var(--busy-size, 2rem) / -2);
+            background-image: none;
+            background-color: var(--color-accent);
+            -webkit-mask: var(--icon-loading) center / contain no-repeat;
+            mask: var(--icon-loading) center / contain no-repeat;
+            animation: busy-spin 0.75s linear infinite;
+        }
+
+        /* Active busy state triggers transition to full visibility */
+        &[aria-busy="true"] {
+            @apply relative isolate pointer-events-none select-none;
+
+            &::before,
+            &::after {
+                @apply opacity-100 visible;
+            }
+        }
+    }
+
+    /* -------------------------------------------------------------
+       3. Reduced motion: slow spinner and instant transitions
+       ------------------------------------------------------------- */
+
+    /**
+     * Overrides animation duration and transition speed for users preferring reduced motion.
+     */
+    @media (prefers-reduced-motion: reduce) {
+        [aria-busy="true"]::before,
+        [aria-busy="true"]::after {
+            animation-duration: 2s;
+        }
+
+        :is(form, fieldset, div, section, article, aside, main, nav, table, ul, ol, dl,
+            figure, details, blockquote, pre)::before,
+        :is(form, fieldset, div, section, article, aside, main, nav, table, ul, ol, dl,
+            figure, details, blockquote, pre)::after {
+            transition-duration: 0.01ms;
+        }
+    }
+}
+-e 
+
+/* File: src/semantic/layout.css */
+/**
+ * SEMANTIC / layout
+ *
+ * Page structure for the HTML5 sectioning elements in their natural context.
+ * No classes are needed.
+ *
+ *   main, article   vertical rhythm between blocks; text blocks capped at a
+ *                   readable measure
+ *   aside           side note: faint tint, discreet start border, smaller text
+ *   body > header   page header: logo and navigation on one flexible row
+ *   body > footer   page footer: discreet top border, muted small text
+ *   nav             lists reset to a plain row of links, with hover, focus and
+ *                   current-page states
+ *
+ * `header[role="banner"]` is the hero (see hero.css) and is left alone here.
+ * Only a page-level `header` and `footer` (direct children of `body`) are
+ * styled, so the ones inside an article or a dialog keep their own look.
+ *
+ * Dials (all optional)
+ *   --measure   max width of text blocks directly inside main and article
+ *               (default 65ch). Headings, figures, tables and grids stay full
+ *               width, so `.wrapper` and `.auto-grid` keep working.
+ *
+ * Semantic states (no class involved)
+ *   a[aria-current]   (any value but "false") current page: tinted fill, bold
+ *   a:hover | :focus-visible                  tinted fill
+ *
+ * Usage
+ *   <body>
+ *     <header><a href="/">Logo</a><nav><ul>...</ul></nav></header>
+ *     <main><article>...</article><aside>...</aside></main>
+ *     <footer><p>...</p></footer>
+ *   </body>
+ *
+ * Reads:  --color-text/muted/heading/accent/accent-soft/surface,
+ *         --radius-control, --typography-spacing-vertical
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Main and article: rhythm and readable measure
+       ------------------------------------------------------------- */
+    :is(main, article) > :is(p, ul, ol, dl, blockquote) {
+        max-width: var(--measure, 65ch);
+    }
+
+    :is(main, article) > :is(section, article, aside, form) {
+        margin-block-end: calc(var(--typography-spacing-vertical) * 2);
+    }
+
+    /* The last block closes the container; the container's own spacing follows. */
+    :is(main, article) > :last-child {
+        margin-block-end: 0;
+    }
+
+    /* -------------------------------------------------------------
+       2. Aside: side note
+       ------------------------------------------------------------- */
+    aside {
+        @apply my-6 px-5 py-4 text-sm;
+        color: var(--color-text);
+        background-color: color-mix(in oklch, var(--color-accent) 3%, var(--color-surface));
+        border-inline-start: 3px solid var(--color-accent-soft);
+        border-radius: 0 var(--radius-control) var(--radius-control) 0;
+    }
+
+    aside > :last-child {
+        margin-block-end: 0;
+    }
+
+    /* -------------------------------------------------------------
+       3. Page header and footer
+       ------------------------------------------------------------- */
+    body > header:not([role="banner"]),
+    body > footer {
+        @apply flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6;
+    }
+
+    body > header:not([role="banner"]) > *,
+    body > footer > * {
+        margin-block: 0;
+    }
+
+    body > header:not([role="banner"]) {
+        @apply py-4;
+        border-bottom: 1px solid color-mix(in oklch, var(--color-text) 12%, var(--color-surface));
+    }
+
+    body > footer {
+        @apply py-6 text-sm;
+        color: var(--color-muted);
+        border-top: 1px solid color-mix(in oklch, var(--color-text) 12%, var(--color-surface));
+    }
+
+    /* -------------------------------------------------------------
+       4. Nav: plain lists and link states
+          Anchors with role="button" keep the button look (buttons.css).
+       ------------------------------------------------------------- */
+    nav :is(ul, ol) {
+        @apply m-0 p-0 list-none flex flex-wrap items-center gap-1;
+    }
+
+    nav :is(ul, ol) > li {
+        @apply m-0 list-none;
+    }
+
+    /* A nav inside an aside is a vertical list. */
+    aside nav :is(ul, ol) {
+        @apply flex-col items-stretch;
+    }
+
+    nav a:not([role="button"]) {
+        @apply inline-block px-3 py-2 no-underline transition-colors duration-150;
+        color: var(--color-text);
+        border-radius: var(--radius-control);
+
+        &:hover,
+        &:focus-visible {
+            background-color: color-mix(in oklch, var(--color-accent) 12%, transparent);
+        }
+
+        &:focus-visible {
+            outline-offset: 2px;
+        }
+
+        &[aria-current]:not([aria-current="false"]) {
+            @apply font-semibold;
+            color: var(--color-heading);
+            background-color: color-mix(in oklch, var(--color-accent) 16%, transparent);
+        }
+    }
+}
+-e 
+
+/* File: src/semantic/hero.css */
+/**
+ * SEMANTIC / hero
+ *
+ * `<header role="banner">` as a full-bleed hero. The role is what makes it a
+ * hero, so no class is needed. An optional `<img>` or `<picture>` placed
+ * directly inside the header fills it, behind the content; a gradient scrim
+ * (`--hero-overlay`) is painted over it.
+ *
+ * Variable contract
+ * -----------------
+ *   --hero-overlay     scrim gradient over the image (default set in theme/derived.css)
+ *   --hero-min-height  minimum height (default min(820px, 92vh))
+ *
+ * Titles use `--font-hero`, falling back to `--font-heading`. Direct children
+ * with a role in the layout: `> p` description, `nav` actions, `ul` key points.
+ *
+ * Top bar
+ * -------
+ * When the first element of the header (ignoring the background `<img>` or
+ * `<picture>`) is a `<nav>`, it becomes a top bar instead of the actions row:
+ * it is attached to the top edge of the hero (no top padding), its children are
+ * spread on one row (brand on the start side, links on the end side), and the
+ * rest of the content is centered in the height left below it: the free space
+ * is split evenly between the bar and the first content, and after the last
+ * content.
+ *
+ * Both layouts work, with the content directly in the header or inside a
+ * `.wrapper` (and the top bar itself can be `<nav class="wrapper wide">`).
+ *
+ * Usage
+ *   <header role="banner">
+ *     <img src="..." alt="">
+ *     <hgroup><p>Eyebrow</p><h1>Title</h1></hgroup>
+ *     <p>Description</p>
+ *     <nav>...actions...</nav>
+ *     <ul>...key points...</ul>
+ *   </header>
+ *
+ * Usage with a top bar (content directly in the header)
+ *   <header role="banner">
+ *     <nav aria-label="Main">
+ *       <a href="/">Brand</a>
+ *       <ul><li><a href="#a">Link</a></li></ul>
+ *     </nav>
+ *     <img src="..." alt="">
+ *     <hgroup><p>Eyebrow</p><h1>Title</h1></hgroup>
+ *     <p>Description</p>
+ *     <nav aria-label="Hero actions">...actions...</nav>
+ *     <ul>...key points...</ul>
+ *   </header>
+ *
+ * Usage with a top bar (content inside a wrapper)
+ *   <header role="banner">
+ *     <nav aria-label="Main" class="wrapper wide">...brand and links...</nav>
+ *     <img src="..." alt="">
+ *     <div class="wrapper">
+ *       <hgroup><p>Eyebrow</p><h1>Title</h1></hgroup>
+ *       <p>Description</p>
+ *       <nav aria-label="Hero actions">...actions...</nav>
+ *       <ul>...key points...</ul>
+ *     </div>
+ *   </header>
+ *
+ * Reads:  --hero-overlay, --hero-min-height, --font-hero, --font-heading
+ * Layer:  components
+ */
+@layer components {
+  /* -------------------------------------------------------------
+       1. Container and text
+       ------------------------------------------------------------- */
+  header[role='banner'] {
+    @apply relative isolate grid overflow-hidden content-end;
+    @apply min-h-[var(--hero-min-height,min(820px,92vh))];
+    @apply px-[clamp(1.5rem,5vw,4rem)] py-[clamp(2rem,6vw,5rem)];
+
+    /* Titles use the hero font (falling back to heading font). */
+    & :is(h1, h2, h3, h4, h5, h6) {
+      font-family: var(--font-hero, var(--font-heading));
+    }
+
+    & h1 {
+      @apply mb-[1.7rem] text-[clamp(3.25rem,5vw+2rem,5.25rem)];
+    }
+
+    /* Description: direct child paragraph, or direct child of a `.wrapper`. */
+    & > p,
+    & > .wrapper > p {
+      @apply max-w-[680px] text-[clamp(1.1rem,2vw,1.45rem)] leading-[1.45];
+    }
+
+    /* Actions row (buttons or links with role="button"). */
+    & nav {
+      @apply mt-8 flex flex-wrap gap-3;
+    }
+
+    /* Key points list below actions. */
+    & ul {
+      @apply mt-10 ml-[1.5em] flex flex-wrap list-none gap-6 p-0 text-[0.9rem];
+    }
+
+    /* Top bar: the first element (ignoring the background image) is a nav.
+       The header becomes a column with no top padding, so the bar touches the
+       top edge. Two auto margins, one under the bar and one under the last
+       content, share the free height equally: the space is split between the
+       bar and the first content, and after the last content. They are
+       `!important` so that a `.wrapper` margin (utilities layer) on the bar or
+       on the content cannot cancel them. */
+    &:has(> nav:nth-child(1 of :not(img, picture))) {
+      @apply flex flex-col pt-0;
+
+      & > :nth-last-child(1 of :not(img, picture)) {
+        @apply mb-auto!;
+      }
+    }
+
+    & > nav:nth-child(1 of :not(img, picture)) {
+      /* Not an actions row: no top margin. The top padding gives the bar some
+         air; the bottom padding is the minimum gap before the content, kept
+         when the header is too short to leave free height. */
+      @apply mt-0 mb-auto! items-center justify-between gap-x-6 gap-y-3 pt-4;
+      @apply pb-[clamp(1.5rem,4vw,3rem)];
+
+      /* Its list is a row of links, not a key points list. */
+      & ul {
+        @apply m-0 gap-x-6 gap-y-2 text-base;
+      }
+    }
+  }
+
+  /* Layer -1: Neutral scrim overlay. */
+  header[role='banner']::after {
+    @apply absolute inset-0 -z-10 pointer-events-none content-[''];
+    background: var(--hero-overlay);
+  }
+
+  /* Layer -2: HTML image or picture background container. */
+  header[role='banner'] > img,
+  header[role='banner'] > picture {
+    @apply absolute inset-0 -z-20 h-full w-full m-0 pointer-events-none;
+  }
+
+  /* Background image fitting and alignment. */
+  header[role='banner'] > img,
+  header[role='banner'] > picture > img {
+    @apply h-full w-full object-cover object-center;
+  }
+}
+-e 
+
+/* File: src/semantic/forms/range.css */
+/**
+ * SEMANTIC / forms / range
+ *
+ * `input[type=range]`: track and thumb share the same height (1.25rem), with
+ * hover, drag, focus and disabled states for both WebKit and Gecko.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   :hover | :active      track tint, thumb grows (more while dragging)
+ *   :focus-visible        ring around the track
+ *   disabled              dimmed, muted thumb
+ *
+ * Reads:  --color-accent/muted/surface, --color-field-border(-hover) and the
+ *         derived tokens --color-range-track(-hover/-active) and
+ *         --color-range-glow (see derived.css, overridable by any theme)
+ * Layer:  components
+ */
+@layer components {
+    input[type="range"] {
+        @apply w-full h-5 appearance-none bg-transparent cursor-pointer select-none m-0 focus:outline-none;
+
+        /* -------------------------------------------------------------
+           1. Track (WebKit and Gecko)
+           ------------------------------------------------------------- */
+        &::-webkit-slider-runnable-track {
+            @apply w-full h-5 rounded-full transition-colors duration-150;
+            background-color: var(--color-range-track);
+            border: 1px solid var(--color-field-border);
+        }
+
+        &::-moz-range-track {
+            @apply w-full h-5 rounded-full transition-colors duration-150;
+            background-color: var(--color-range-track);
+            border: 1px solid var(--color-field-border);
+        }
+
+        /* -------------------------------------------------------------
+           2. Thumb (WebKit and Gecko)
+           ------------------------------------------------------------- */
+        /* Same height as the track, so no vertical offset is needed. */
+        &::-webkit-slider-thumb {
+            @apply appearance-none w-5 h-5 rounded-full border border-[color:var(--color-accent)]
+                transition-all duration-150 ease-out shadow-xs;
+            margin-top: -1px;
+            background-color: var(--color-accent);
+        }
+
+        &::-moz-range-thumb {
+            @apply w-5 h-5 rounded-full border border-[color:var(--color-accent)]
+                transition-all duration-150 ease-out shadow-xs box-border;
+            background-color: var(--color-accent);
+        }
+
+        /* -------------------------------------------------------------
+           3. Hover: the thumb grows slightly and gains a glow
+           ------------------------------------------------------------- */
+        &:hover:not(:disabled) {
+            &::-webkit-slider-runnable-track {
+                background-color: var(--color-range-track-hover);
+                border-color: var(--color-field-border-hover);
+            }
+            &::-moz-range-track {
+                background-color: var(--color-range-track-hover);
+                border-color: var(--color-field-border-hover);
+            }
+            &::-webkit-slider-thumb {
+                @apply scale-110 brightness-105;
+                box-shadow: 0 2px 6px var(--color-range-glow);
+            }
+            &::-moz-range-thumb {
+                @apply scale-110 brightness-105;
+                box-shadow: 0 2px 6px var(--color-range-glow);
+            }
+        }
+
+        /* -------------------------------------------------------------
+           4. Active: while dragging the thumb grows further
+           ------------------------------------------------------------- */
+        &:active:not(:disabled) {
+            &::-webkit-slider-runnable-track {
+                background-color: var(--color-range-track-active);
+            }
+            &::-moz-range-track {
+                background-color: var(--color-range-track-active);
+            }
+            &::-webkit-slider-thumb {
+                @apply scale-125 brightness-95;
+            }
+            &::-moz-range-thumb {
+                @apply scale-125 brightness-95;
+            }
+        }
+
+        /* -------------------------------------------------------------
+           5. Keyboard focus: ring around the track
+           ------------------------------------------------------------- */
+        &:focus-visible {
+            &::-webkit-slider-runnable-track {
+                @apply ring-3 ring-offset-2;
+                --tw-ring-color: var(--color-range-glow);
+                --tw-ring-offset-color: var(--color-surface);
+            }
+            &::-moz-range-track {
+                @apply ring-3 ring-offset-2;
+                --tw-ring-color: var(--color-range-glow);
+                --tw-ring-offset-color: var(--color-surface);
+            }
+        }
+
+        /* -------------------------------------------------------------
+           6. Disabled
+           ------------------------------------------------------------- */
+        &:disabled {
+            @apply opacity-50 cursor-not-allowed;
+
+            &::-webkit-slider-thumb {
+                @apply border-[color:var(--color-muted)];
+                background-color: var(--color-muted);
+            }
+            &::-moz-range-thumb {
+                @apply border-[color:var(--color-muted)];
+                background-color: var(--color-muted);
+            }
+        }
+    }
+}
+-e 
+
+/* File: src/semantic/forms/fields.css */
+/**
+ * SEMANTIC / forms / fields
+ *
+ * label, text inputs, select, textarea, search / date / time inputs, number,
+ * ARIA validation, helper text (<small>) and fieldset / legend.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   aria-invalid="true"    error border, ring and icon
+ *   aria-invalid="false"   success border, ring and icon
+ *   disabled               dimmed, not interactive
+ * A <small> right after the field takes the same state color.
+ *
+ * Reads:  --color-accent/surface/text/muted/border/valid/invalid,
+ *         --radius-control, --icon-*, and the derived form tokens
+ *         --color-field, --color-field-hover, --color-field-border,
+ *         --color-field-border-hover, --color-focus-ring,
+ *         --color-valid-ring, --color-invalid-ring (see derived.css)
+ * Inside [role="group"] the layout is handled by group.css.
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Label
+       ------------------------------------------------------------- */
+    label {
+        @apply mb-1.5 block text-sm font-medium text-[color:var(--color-text)];
+    }
+
+    /* A label that wraps a checkbox or radio becomes an inline row. */
+    label:has(input[type="checkbox"], input[type="radio"]) {
+        @apply inline-flex cursor-pointer items-center gap-2.5 text-base font-normal select-none mb-0 w-fit;
+    }
+
+    label > :where(input, select, textarea) {
+        @apply mt-1;
+    }
+
+    /* -------------------------------------------------------------
+       2. Text inputs, select, textarea
+       ------------------------------------------------------------- */
+    input:not(
+        [type="checkbox"],
+        [type="radio"],
+        [type="range"],
+        [type="file"],
+        [type="color"],
+        [type="hidden"],
+        [type="submit"],
+        [type="button"],
+        [type="reset"]
+    ),
+    select,
+    textarea {
+        @apply w-full mb-4 px-4 py-2.5 min-h-11 appearance-none rounded-[var(--radius-control)]
+            transition-colors duration-150
+            placeholder:text-[color:var(--color-muted)]
+            focus:outline-none focus:border-[color:var(--color-accent)]
+            focus:ring-3 focus:ring-[color:var(--color-focus-ring)]
+            disabled:opacity-55 disabled:cursor-not-allowed;
+
+        /* Fill and border come from the theme's derived field tokens. */
+        background-color: var(--color-field);
+        border: 1px solid var(--color-field-border);
+        color: var(--color-text);
+    }
+
+    /* Hover deepens the tint slightly. */
+    input:not(
+        [type="checkbox"],
+        [type="radio"],
+        [type="range"],
+        [type="file"],
+        [type="color"],
+        [type="hidden"],
+        [type="submit"],
+        [type="button"],
+        [type="reset"]
+    ):hover:not(:disabled),
+    select:hover:not(:disabled),
+    textarea:hover:not(:disabled) {
+        background-color: var(--color-field-hover);
+        border-color: var(--color-field-border-hover);
+    }
+
+    textarea {
+        @apply min-h-32 resize-y block;
+    }
+
+    /* -------------------------------------------------------------
+       3. Select with an SVG chevron
+       ------------------------------------------------------------- */
+    select {
+        @apply pe-10 bg-no-repeat bg-[position:right_0.75rem_center] bg-[size:1rem_auto];
+        background-image: var(--icon-chevron);
+    }
+
+    select[multiple] {
+        @apply pe-4 h-auto bg-none;
+    }
+
+    /* -------------------------------------------------------------
+       4. Search
+       ------------------------------------------------------------- */
+    input[type="search"]:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]) {
+        @apply ps-10 bg-no-repeat bg-[size:1rem_auto];
+        background-image: var(--icon-search);
+        background-position: center left 0.875rem;
+
+        &[aria-invalid="false"] {
+            @apply ps-10 pe-10;
+            background-image: var(--icon-search), var(--icon-valid);
+            background-position: center left 0.875rem, center right 0.75rem;
+        }
+
+        &[aria-invalid="true"] {
+            @apply ps-10 pe-10;
+            background-image: var(--icon-search), var(--icon-invalid);
+            background-position: center left 0.875rem, center right 0.75rem;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       5. Date and time
+       ------------------------------------------------------------- */
+    input:is([type="date"], [type="datetime-local"], [type="month"], [type="time"], [type="week"]) {
+        @apply pe-10 bg-no-repeat bg-[size:1rem_auto];
+        background-image: var(--icon-date);
+        background-position: center right 0.75rem;
+
+        &[type="time"] {
+            background-image: var(--icon-time);
+        }
+
+        /* The native indicator stays on top of the SVG, fully transparent,
+           so a click on the icon still opens the picker. */
+        &::-webkit-calendar-picker-indicator {
+            width: 1rem;
+            margin-right: -0.5rem;
+            margin-left: 0.5rem;
+            opacity: 0;
+            cursor: pointer;
+        }
+    }
+
+    /* Right-to-left: icons move to the other side. */
+    [dir="rtl"] {
+        input[type="search"]:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]) {
+            background-position: center right 0.875rem;
+
+            &[aria-invalid] {
+                background-position: center right 0.875rem, center left 0.75rem;
+            }
+        }
+
+        input:is([type="date"], [type="datetime-local"], [type="month"], [type="time"], [type="week"]) {
+            text-align: right;
+            background-position: center left 0.75rem;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       6. Number: no native spinners (steppers are built with role="group")
+       ------------------------------------------------------------- */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+
+    /* -------------------------------------------------------------
+       7. ARIA validation
+       ------------------------------------------------------------- */
+    /* Written with :is(), not :where(), on purpose: the base field rule above
+       has the specificity of `input:not(...)`, and validation must match it
+       to win by source order. With :where() the state border, ring and icon
+       padding would never apply. */
+    :is(input, textarea)[aria-invalid="false"] {
+        @apply border-[color:var(--color-valid)] pe-10 bg-no-repeat bg-[position:right_0.75rem_center] bg-[size:1rem_auto]
+            focus:border-[color:var(--color-valid)] focus:ring-[color:var(--color-valid-ring)];
+        background-image: var(--icon-valid);
+    }
+
+    :is(input, textarea)[aria-invalid="true"] {
+        @apply border-[color:var(--color-invalid)] pe-10 bg-no-repeat bg-[position:right_0.75rem_center] bg-[size:1rem_auto]
+            focus:border-[color:var(--color-invalid)] focus:ring-[color:var(--color-invalid-ring)];
+        background-image: var(--icon-invalid);
+    }
+
+    /* The field hover rule is more specific than the state rules above, so the
+       state border is restated for :hover to keep the neutral border away. */
+    :is(input, textarea)[aria-invalid="false"]:hover:not(:disabled) {
+        border-color: var(--color-valid);
+    }
+
+    :is(input, textarea)[aria-invalid="true"]:hover:not(:disabled) {
+        border-color: var(--color-invalid);
+    }
+
+    /* -------------------------------------------------------------
+       8. Helper text
+       ------------------------------------------------------------- */
+    :where(input, select, textarea, fieldset) + small {
+        @apply -mt-2 mb-4 block w-full text-xs text-[color:var(--color-muted)];
+    }
+
+    :where(input, select, textarea, fieldset)[aria-invalid="false"] + small {
+        @apply text-[color:var(--color-valid)];
+    }
+
+    :where(input, select, textarea, fieldset)[aria-invalid="true"] + small {
+        @apply text-[color:var(--color-invalid)];
+    }
+
+    /* -------------------------------------------------------------
+       9. Fieldset and legend
+       ------------------------------------------------------------- */
+    fieldset {
+        @apply w-full mb-6 p-5 border border-[color:var(--color-border)] rounded-xl flex flex-col gap-3;
+    }
+
+    /* Controls inside a fieldset are spaced by its gap, not by their margin. */
+    fieldset :where(input:not([type="checkbox"], [type="radio"]), select, textarea) {
+        @apply mb-0;
+    }
+
+    legend {
+        @apply px-2 font-semibold text-[color:var(--color-text)];
+    }
+}
+-e 
+
+/* File: src/semantic/forms/choices.css */
+/**
+ * SEMANTIC / forms / choices
+ *
+ * Checkbox, radio and switch. A switch is a checkbox with a role:
+ *   <input type="checkbox" role="switch">
+ *
+ * The check and indeterminate marks are SVG masks painted with
+ * `--color-choice-check`. A data-URI cannot use `var()`, so the color lives
+ * on the `::before` pseudo-element and the SVG only provides the shape.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   :checked | :indeterminate   accent fill and mark (switch: the knob slides)
+ *   disabled                    dimmed, not interactive
+ *
+ * Reads:  --color-accent/surface/border, --color-choice-border-hover,
+ *         --color-choice-check, --color-focus-ring (see derived.css)
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Checkbox and radio: shared box
+       ------------------------------------------------------------- */
+    input[type="checkbox"],
+    input[type="radio"] {
+        @apply relative inline-block shrink-0 align-middle appearance-none cursor-pointer
+            w-[1.25em] h-[1.25em] m-0 p-0
+            border border-[color:var(--color-border)] bg-[color:var(--color-surface)]
+            bg-center bg-no-repeat bg-[size:0.75em_auto]
+            transition-all duration-150
+            hover:border-[color:var(--color-choice-border-hover)]
+            focus-visible:outline-none focus-visible:border-[color:var(--color-accent)]
+            focus-visible:ring-3 focus-visible:ring-[color:var(--color-focus-ring)]
+            disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    /* -------------------------------------------------------------
+       2. Checkbox
+       ------------------------------------------------------------- */
+    input[type="checkbox"]:not([role="switch"]) {
+        @apply rounded;
+    }
+
+    input[type="checkbox"]:not([role="switch"]):checked {
+        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)];
+        --choice-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3.75 9 6.5 11.75 12.25 4.75'/%3E%3C/svg%3E");
+    }
+
+    input[type="checkbox"]:not([role="switch"]):indeterminate {
+        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)];
+        --choice-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='4' y1='8' x2='12' y2='8'/%3E%3C/svg%3E");
+    }
+
+    input[type="checkbox"]:not([role="switch"]):is(:checked, :indeterminate)::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-color: var(--color-choice-check);
+        -webkit-mask: var(--choice-mark) center / 0.75em auto no-repeat;
+        mask: var(--choice-mark) center / 0.75em auto no-repeat;
+    }
+
+    /* -------------------------------------------------------------
+       3. Radio
+       ------------------------------------------------------------- */
+    input[type="radio"] {
+        @apply rounded-full;
+    }
+
+    input[type="radio"]:checked {
+        @apply bg-[color:var(--color-surface)] border-[color:var(--color-accent)] border-[0.35em];
+    }
+
+    /* -------------------------------------------------------------
+       4. Switch: input[type="checkbox"][role="switch"]
+       ------------------------------------------------------------- */
+    input[type="checkbox"][role="switch"] {
+        @apply w-[2.25em] h-[1.25em] p-0 rounded-full border-[color:var(--color-border)] bg-[color:var(--color-border)];
+    }
+
+    /* The knob. */
+    input[type="checkbox"][role="switch"]::before {
+        content: "";
+        @apply block h-full aspect-square rounded-full bg-[color:var(--color-surface)] shadow-sm transition-[margin] duration-150;
+    }
+
+    input[type="checkbox"][role="switch"]:checked {
+        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)] bg-none;
+    }
+
+    /* Checked: the knob slides to the end of the track. */
+    input[type="checkbox"][role="switch"]:checked::before {
+        margin-inline-start: calc(2.25em - 1.25em);
+    }
+}
+-e 
+
+/* File: src/semantic/data.css */
+/**
+ * SEMANTIC / data
+ *
+ * Elements that present data and quoted content: `progress`, `meter`, `mark`,
+ * `time`, `data`, `blockquote`, `q`, `cite` and `abbr`. No classes are needed.
+ *
+ * Variable contract
+ * -----------------
+ * Progress and meter read their colors from custom properties set on the
+ * element itself, so a tone class can change them without knowing any selector
+ * of this file.
+ *
+ *   progress
+ *     --data-tone     fill. Defaults to `--tone`, then to the accent.
+ *     --data-track    track behind the fill (derived from the tone)
+ *
+ *   meter
+ *     --meter-good    value in the optimum region    (default --color-valid)
+ *     --meter-fair    value in the suboptimum region (default --color-warning)
+ *     --meter-poor    value in the worst region      (default --color-invalid)
+ *     --data-track    track behind the fill
+ *
+ * `--tone` (set by .positive / .negative / .warning in utilities/tone.css)
+ * overrides all three meter colors, which is rarely what a meter wants:
+ * leave it unset and let `low`, `high` and `optimum` pick the color.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   progress without a value      animated bar (`:indeterminate`)
+ *   meter value / low / high /    the browser picks the region; the region
+ *   optimum                       picks the color
+ *
+ * Usage
+ *   <progress value="40" max="100">40%</progress>
+ *   <progress class="positive" value="90" max="100">90%</progress>
+ *   <meter value="0.8" low="0.3" high="0.7" optimum="1">80%</meter>
+ *   <time datetime="2026-10-05">5 October 2026</time>
+ *
+ * Under `prefers-reduced-motion` the indeterminate bar moves slower instead of
+ * stopping, so the busy state stays visible.
+ *
+ * Reads:  --color-text/muted/accent/surface/surface-soft/valid/invalid/warning,
+ *         --radius-control, --typography-spacing-top
+ * Layer:  components
+ */
+@layer components {
+
+    @keyframes data-indeterminate {
+        from { background-position: -40% 0; }
+        to   { background-position: 140% 0; }
+    }
+
+    /* -------------------------------------------------------------
+       1. Progress
+       ------------------------------------------------------------- */
+    progress {
+        --data-tone: var(--tone, var(--color-accent));
+        --data-track: color-mix(in oklch, var(--data-tone) 15%, var(--color-surface-soft));
+
+        @apply block w-full h-3 m-0 mb-4 appearance-none overflow-hidden rounded-full border-0;
+        background-color: var(--data-track);
+        color: var(--data-tone);
+
+        /* WebKit paints the track in a pseudo-element: keep it transparent so
+           the element's own track color shows, as in Gecko. */
+        &::-webkit-progress-bar {
+            background-color: transparent;
+        }
+
+        &::-webkit-progress-value {
+            @apply rounded-full transition-[width] duration-300;
+            background-color: var(--data-tone);
+        }
+
+        &::-moz-progress-bar {
+            @apply rounded-full;
+            background-color: var(--data-tone);
+        }
+    }
+
+    /* No value: a segment of the tone slides along the track. */
+    progress:indeterminate {
+        background-image: linear-gradient(90deg, transparent 0%, var(--data-tone) 50%, transparent 100%);
+        background-size: 40% 100%;
+        background-repeat: no-repeat;
+        animation: data-indeterminate 1.2s ease-in-out infinite;
+    }
+
+    /* -------------------------------------------------------------
+       2. Meter
+          The three regions map to the three semantic tones.
+       ------------------------------------------------------------- */
+    meter {
+        --meter-good: var(--tone, var(--color-valid));
+        --meter-fair: var(--tone, var(--color-warning));
+        --meter-poor: var(--tone, var(--color-invalid));
+        --data-track: color-mix(in oklch, var(--color-text) 10%, var(--color-surface));
+
+        @apply block w-full h-3 m-0 mb-4 appearance-none overflow-hidden rounded-full border-0;
+        background-color: var(--data-track);
+
+        &::-webkit-meter-bar {
+            @apply h-full rounded-full border-0;
+            background-color: var(--data-track);
+        }
+
+        &::-webkit-meter-optimum-value {
+            @apply rounded-full transition-[width] duration-300;
+            background: var(--meter-good);
+        }
+
+        &::-webkit-meter-suboptimum-value {
+            @apply rounded-full transition-[width] duration-300;
+            background: var(--meter-fair);
+        }
+
+        &::-webkit-meter-even-less-good-value {
+            @apply rounded-full transition-[width] duration-300;
+            background: var(--meter-poor);
+        }
+
+        &::-moz-meter-bar {
+            @apply rounded-full;
+        }
+    }
+
+    /* Gecko picks the region with pseudo-classes. Each rule stands alone: a
+       browser that does not know one of them would drop a shared list. */
+    meter:-moz-meter-optimum::-moz-meter-bar {
+        background: var(--meter-good);
+    }
+
+    meter:-moz-meter-sub-optimum::-moz-meter-bar {
+        background: var(--meter-fair);
+    }
+
+    meter:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+        background: var(--meter-poor);
+    }
+
+    /* -------------------------------------------------------------
+       3. Highlight, dates and numbers
+       ------------------------------------------------------------- */
+    mark {
+        @apply rounded px-1.5 py-0.5;
+        background-color: color-mix(in oklch, var(--color-accent) 22%, var(--color-surface));
+        color: var(--color-text);
+    }
+
+    time,
+    data {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* -------------------------------------------------------------
+       4. Quotes: blockquote, q, cite
+       ------------------------------------------------------------- */
+    blockquote {
+        margin-block: var(--typography-spacing-top);
+        padding-block: 0.5em;
+        padding-inline-start: 1.25rem;
+        padding-inline-end: 0;
+        border-inline-start: 0.25rem solid var(--color-accent);
+        font-style: italic;
+        background: color-mix(in oklch, var(--color-accent) 4%, transparent);
+        border-radius: 0 var(--radius-control) var(--radius-control) 0;
+
+        footer,
+        > cite {
+            margin-block-start: 0.5em;
+            font-style: normal;
+            font-size: 0.875em;
+            color: var(--color-muted);
+
+            &::before {
+                content: "— ";
+            }
+        }
+
+        /* A <cite> placed directly in the quote is its attribution line. */
+        > cite {
+            display: block;
+        }
+    }
+
+    /* The quotation marks come from the browser, according to `lang`. */
+    q {
+        font-style: italic;
+    }
+
+    /* -------------------------------------------------------------
+       5. Abbreviations
+       ------------------------------------------------------------- */
+    abbr[title] {
+        text-decoration: underline dotted var(--color-muted);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.2em;
+        cursor: help;
+    }
+}
+-e 
+
+/* File: src/semantic/typography.css */
+/**
+ * SEMANTIC / typography
+ *
+ * Fluid type scale and vertical rhythm for text elements: headings, hgroup,
+ * paragraphs, links, lists, inline text (ins, del), code, kbd, pre and tables.
+ *
+ * Quotes, mark and abbr live in data.css; figure and figcaption in media.css.
+ *
+ * Rhythm comes from two tokens defined on `:root` in theme/derived.css:
+ *   --typography-spacing-vertical   space after a block (default 1.25em)
+ *   --typography-spacing-top        space before a heading or quote (default 2em)
+ *
+ * hgroup convention:
+ *   first <p>        eyebrow (accent color, small, uppercase)
+ *   <h1>-<h6>        the title
+ *   last <p>         subtitle (muted, fluid size)
+ *
+ * Reads:  --font-heading, --font-text, --font-mono, --color-text/heading/muted/
+ *         accent/accent-soft/border/surface/surface-soft/valid/invalid
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Block spacing
+       ------------------------------------------------------------- */
+    address,
+    blockquote,
+    dl,
+    ol,
+    p,
+    pre,
+    table,
+    ul,
+    figure {
+        margin-block-start: 0;
+        margin-block-end: var(--typography-spacing-vertical);
+        color: var(--color-text);
+    }
+
+    /* -------------------------------------------------------------
+       2. Headings
+       ------------------------------------------------------------- */
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-bold;
+        font-family: var(--font-heading, var(--font-text));
+        color: var(--color-heading);
+        margin-block-start: 1em;
+        margin-block-end: calc(var(--typography-spacing-vertical) * 0.6);
+        text-wrap: balance;
+        line-height: .9;
+        letter-spacing: -.02em;
+    }
+
+    /* Fluid scale: each size grows with the viewport between a floor and a ceiling. */
+    h1 { font-size: clamp(2.25rem, 5vw + 1rem, 4.25rem); }
+    h2 { font-size: clamp(1.85rem, 3.5vw + 0.8rem, 3.25rem); }
+    h3 { font-size: clamp(1.5rem, 2.5vw + 0.6rem, 2.35rem); }
+    h4 { font-size: clamp(1.25rem, 1.8vw + 0.4rem, 1.75rem); }
+    h5 { font-size: clamp(1.1rem, 1.2vw + 0.3rem, 1.35rem); }
+    h6 { font-size: clamp(1rem, 1vw + 0.2rem, 1.15rem); }
+
+    /* A heading that follows a block gets extra space above it. */
+    :where(article, address, blockquote, dl, figure, form, ol, p, pre, table, ul) + :is(h1, h2, h3, h4, h5, h6) {
+        margin-block-start: var(--typography-spacing-top);
+    }
+
+    /* -------------------------------------------------------------
+       3. Paragraphs
+       ------------------------------------------------------------- */
+    p {
+        margin-block-end: var(--typography-spacing-vertical);
+        text-wrap: pretty;
+    }
+
+    /* -------------------------------------------------------------
+       4. Heading groups
+       ------------------------------------------------------------- */
+    hgroup {
+        margin-block-end: var(--typography-spacing-vertical);
+
+        > * {
+            margin-block: 0;
+        }
+
+        /* Eyebrow */
+        > p:first-child {
+            color: var(--color-accent);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: .12em;
+            font-size: .8em;
+        }
+    }
+
+    /* Subtitle: the last paragraph of an hgroup, or the paragraph that follows it in a header. */
+    header > hgroup + p,
+    hgroup > p:not(:first-child):last-child {
+        color: var(--color-muted);
+        font-size: clamp(1rem, 1.2vw, 1.25rem);
+        font-weight: 400;
+        margin-block-start: 0.25em;
+    }
+
+    /* -------------------------------------------------------------
+       5. Links
+       ------------------------------------------------------------- */
+    :where(a:not([role="button"])),
+    [role="link"] {
+        color: var(--color-accent);
+        text-decoration: underline;
+        text-decoration-color: color-mix(in oklch, var(--color-accent) 40%, transparent);
+        text-underline-offset: 0.25em;
+        transition: color 150ms ease, text-decoration-color 150ms ease;
+
+        &:is(:hover, :focus-visible) {
+            color: color-mix(in oklch, var(--color-accent) 85%, black);
+            text-decoration-color: currentColor;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 4px;
+            border-radius: 2px;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       6. Lists
+       ------------------------------------------------------------- */
+    :where(ol, ul) {
+        padding-inline-start: 1.5em;
+
+        li {
+            margin-block-end: calc(var(--typography-spacing-vertical) * 0.3);
+
+            &::marker {
+                color: var(--color-accent);
+            }
+        }
+    }
+
+    ul li { list-style-type: disc; }
+    ol li {
+        list-style-type: decimal;
+        font-variant-numeric: tabular-nums;
+    }
+
+    :where(dl, ol, ul) :where(dl, ol, ul) {
+        margin-block-start: calc(var(--typography-spacing-vertical) * 0.3);
+        margin-block-end: 0;
+    }
+
+    dl {
+        dt {
+            font-weight: 600;
+            color: var(--color-text);
+            margin-block-start: 0.75em;
+        }
+        dd {
+            margin-inline-start: 1.25em;
+            color: var(--color-muted);
+        }
+    }
+
+    /* -------------------------------------------------------------
+       7. Inline elements
+       ------------------------------------------------------------- */
+    ins {
+        color: var(--color-valid);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+
+    del {
+        color: var(--color-invalid);
+        text-decoration: line-through;
+    }
+
+    /* -------------------------------------------------------------
+       8. Code and monospace
+       ------------------------------------------------------------- */
+    code, kbd, samp {
+        font-family: var(--font-mono);
+        font-size: 0.875em;
+    }
+
+    code {
+        @apply rounded px-1.5 py-0.5;
+        background: var(--color-accent-soft);
+        color: var(--color-text);
+    }
+
+    kbd {
+        @apply rounded px-1.5 py-0.5 border text-xs shadow-xs;
+        background-color: var(--color-surface-soft);
+        border-color: var(--color-border);
+        color: var(--color-text);
+    }
+
+    pre {
+        @apply my-6 overflow-x-auto rounded-xl p-5;
+        font-family: var(--font-mono);
+        background: color-mix(in oklch, var(--color-text) 95%, black);
+        color: var(--color-surface);
+
+        code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       9. Tables
+       ------------------------------------------------------------- */
+    :where(table) {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: start;
+        font-variant-numeric: tabular-nums;
+        margin-block-end: var(--typography-spacing-vertical);
+    }
+
+    th, td {
+        padding-block: 0.75rem;
+        padding-inline: 1rem;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-text);
+    }
+
+    th {
+        font-weight: 600;
+        text-align: start;
+        background-color: color-mix(in oklch, var(--color-accent) 5%, var(--color-surface));
+    }
+
+    tfoot {
+        th, td {
+            border-top: 2px solid var(--color-border);
+            border-bottom: none;
+            font-weight: 600;
+        }
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: color-mix(in oklch, var(--color-text) 2%, transparent);
+    }
+}
+-e 
+

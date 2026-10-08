@@ -1,0 +1,92 @@
+@import 'tailwindcss' source(none);
+
+/**
+ * Blush CSS - entry point
+ *
+ * Beautiful by default. Powerful by utility.
+ *
+ * Blush is a classless CSS framework built on Tailwind CSS v4 (`@apply`).
+ * Write semantic HTML and it looks right; reach for a class only when you
+ * want to change how something looks.
+ *
+ * Architecture
+ * ------------
+ * Four cascade layers, from lowest to highest priority (the order is the one
+ * declared by Tailwind itself):
+ *
+ *   theme       design tokens only (colors, radius, fonts, icons)
+ *   base        reboot: page background, selection, nested themes
+ *   components  SEMANTIC styles: native elements, `role` and `aria-*` states.
+ *               No classes are required, none are used as selectors.
+ *   utilities   OPT-IN classes: tones, outlined buttons, media overlays, layout.
+ *
+ * The one rule behind the split:
+ *
+ *   Attributes (`aria-*`, `role`, `data-theme`) say what something IS or what
+ *   state it is in. Classes say how you want it to LOOK.
+ *
+ * Because utilities live in the highest layer they always win over semantic
+ * styles, without `!important` and without specificity wars.
+ *
+ * Public API
+ * ----------
+ *   Elements    typography, tables, forms, buttons, main, article, aside,
+ *               nav, details, dialog, menu, progress, meter, figure, iframe
+ *   Roles       role="button" | "group" | "switch" | "link" | "banner" (hero) |
+ *               "region" (dialog banner) | "menu" | "menuitem" | "tab" |
+ *               "option" | "treeitem" | "alert" | "status"
+ ...
+ *   Classes     .positive .negative .warning         (tone)
+ *               .muted .accent                       (neutral / filled button surface)
+ *               .outlined                            (button shape)
+ *               .cover .overlay .overlay-<position>  (media)
+ *               .wrapper .wrapper.wide .stack .cluster .auto-grid  (layout)
+ * Bundling
+ * --------
+ * Modules are mostly independent: for a smaller bundle copy this file and
+ * comment out the imports you do not need. Keep these links in mind:
+ *   - theme/* is always required: every module reads its tokens.
+ *   - hero.css reads `--hero-overlay` (derived.css).
+ *   - group.css expects buttons.css and forms/fields.css for the elements it holds.
+ *   - `.outlined`, `.muted` and `.accent` drive the `--btn-*` variables of
+ *     semantic/buttons.css.
+ * Order matters: inside a layer the last declaration wins at equal specificity.
+ *
+ * Tailwind sources
+ * ----------------
+ * `source(none)` makes the build scan nothing but Blush itself, so the bundle
+ * carries no Tailwind utility you did not ask for. To use Tailwind classes in
+ * your own markup, add `@source "<path to your templates>"` in your entry CSS. */
+
+/* 1. THEME - tokens, derived defaults, themes, icons */
+@import './theme/tokens.css';
+@import './theme/derived.css';
+@import './theme/themes.css';
+@import './theme/icons.css';
+
+/* 2. BASE - reboot */
+@import './base/reboot.css';
+
+/* 3. SEMANTIC - classless styles for elements, roles and ARIA states */
+@import './semantic/hero.css';
+@import './semantic/typography.css';
+@import './semantic/layout.css';
+@import './semantic/media.css';
+@import './semantic/data.css';
+@import './semantic/buttons.css';
+@import './semantic/forms/fields.css';
+@import './semantic/forms/choices.css';
+@import './semantic/forms/range.css';
+@import './semantic/group.css';
+@import './semantic/containers.css';
+@import './semantic/feedback.css';
+@import './semantic/busy.css';
+@import "./semantic/breadcrumb.css";
+@import "./semantic/hr.css";
+
+
+/* 4. UTILITIES - opt-in classes */
+@import './utilities/tone.css';
+@import './utilities/outlined.css';
+@import './utilities/media.css';
+@import './utilities/layout.css';

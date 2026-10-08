@@ -1,0 +1,133 @@
+/**
+ * SEMANTIC / layout
+ *
+ * Page structure for the HTML5 sectioning elements in their natural context.
+ * No classes are needed.
+ *
+ *   main, article   vertical rhythm between blocks; text blocks capped at a
+ *                   readable measure
+ *   aside           side note: faint tint, discreet start border, smaller text
+ *   body > header   page header: logo and navigation on one flexible row
+ *   body > footer   page footer: discreet top border, muted small text
+ *   nav             lists reset to a plain row of links, with hover, focus and
+ *                   current-page states
+ *
+ * `header[role="banner"]` is the hero (see hero.css) and is left alone here.
+ * Only a page-level `header` and `footer` (direct children of `body`) are
+ * styled, so the ones inside an article or a dialog keep their own look.
+ *
+ * Dials (all optional)
+ *   --measure   max width of text blocks directly inside main and article
+ *               (default 65ch). Headings, figures, tables and grids stay full
+ *               width, so `.wrapper` and `.auto-grid` keep working.
+ *
+ * Semantic states (no class involved)
+ *   a[aria-current]   (any value but "false") current page: tinted fill, bold
+ *   a:hover | :focus-visible                  tinted fill
+ *
+ * Usage
+ *   <body>
+ *     <header><a href="/">Logo</a><nav><ul>...</ul></nav></header>
+ *     <main><article>...</article><aside>...</aside></main>
+ *     <footer><p>...</p></footer>
+ *   </body>
+ *
+ * Reads:  --color-text/muted/heading/accent/accent-soft/surface,
+ *         --radius-control, --typography-spacing-vertical
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Main and article: rhythm and readable measure
+       ------------------------------------------------------------- */
+    :is(main, article) > :is(p, ul, ol, dl, blockquote) {
+        max-width: var(--measure, 65ch);
+    }
+
+    :is(main, article) > :is(section, article, aside, form) {
+        margin-block-end: calc(var(--typography-spacing-vertical) * 2);
+    }
+
+    /* The last block closes the container; the container's own spacing follows. */
+    :is(main, article) > :last-child {
+        margin-block-end: 0;
+    }
+
+    /* -------------------------------------------------------------
+       2. Aside: side note
+       ------------------------------------------------------------- */
+    aside {
+        @apply my-6 px-5 py-4 text-sm;
+        color: var(--color-text);
+        background-color: color-mix(in oklab, var(--color-accent) 3%, var(--color-surface));
+        border-inline-start: 3px solid var(--color-accent-soft);
+        border-radius: 0 var(--radius-control) var(--radius-control) 0;
+    }
+
+    aside > :last-child {
+        margin-block-end: 0;
+    }
+
+    /* -------------------------------------------------------------
+       3. Page header and footer
+       ------------------------------------------------------------- */
+    body > header:not([role="banner"]),
+    body > footer {
+        @apply flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6;
+    }
+
+    body > header:not([role="banner"]) > *,
+    body > footer > * {
+        margin-block: 0;
+    }
+
+    body > header:not([role="banner"]) {
+        @apply py-4;
+        border-bottom: 1px solid color-mix(in oklab, var(--color-text) 12%, var(--color-surface));
+    }
+
+    body > footer {
+        @apply py-6 text-sm;
+        color: var(--color-muted);
+        border-top: 1px solid color-mix(in oklab, var(--color-text) 12%, var(--color-surface));
+    }
+
+    /* -------------------------------------------------------------
+       4. Nav: plain lists and link states
+          Anchors with role="button" keep the button look (buttons.css).
+       ------------------------------------------------------------- */
+    nav :is(ul, ol) {
+        @apply m-0 p-0 list-none flex flex-wrap items-center gap-1;
+    }
+
+    nav :is(ul, ol) > li {
+        @apply m-0 list-none;
+    }
+
+    /* A nav inside an aside is a vertical list. */
+    aside nav :is(ul, ol) {
+        @apply flex-col items-stretch;
+    }
+
+    nav a:not([role="button"]) {
+        @apply inline-block px-3 py-2 no-underline transition-colors duration-150;
+        color: var(--color-text);
+        border-radius: var(--radius-control);
+
+        &:hover,
+        &:focus-visible {
+            background-color: color-mix(in oklab, var(--color-accent) 12%, transparent);
+        }
+
+        &:focus-visible {
+            outline-offset: 2px;
+        }
+
+        &[aria-current]:not([aria-current="false"]) {
+            @apply font-semibold;
+            color: var(--color-heading);
+            background-color: color-mix(in oklab, var(--color-accent) 16%, transparent);
+        }
+    }
+}
