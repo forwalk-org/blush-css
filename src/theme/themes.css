@@ -1,0 +1,129 @@
+/**
+ * THEME / themes
+ *
+ * The built-in themes. A theme sets the PUBLIC tokens (required):
+ *   accent, surface, text, contrast, invalid, valid, warning, radius-control
+ *
+ * and may also set any DERIVED token (optional):
+ *   muted, border, surface-soft, accent-soft, heading
+ *   field, field-hover, field-border, field-border-hover, focus-ring,
+ *   valid-ring, invalid-ring, choice-border-hover, choice-check,
+ *   range-track, range-track-hover, range-track-active, range-glow
+ * Derived tokens a theme leaves out use the formulas in derived.css. The
+ * built-in dark, primary and secondary themes set `--color-heading`; light
+ * keeps the default formula.
+ *
+ * Fonts (all optional)
+ * --------------------
+ *   --font-text      page text, buttons and fields (they inherit it).
+ *                    Default: the system sans (--font-sans)
+ *   --font-heading   h1-h6; follows --font-text when not set
+ *   --font-hero      h1-h6 inside <header role="banner">; follows --font-heading
+ *
+ * Blush ships no web font. A theme only sets the stack: to use another face,
+ * load it in the page (a <link> or an @font-face in your CSS) and name it here.
+ *
+ * Hero (<header role="banner"> over an image, see semantic/hero.css; optional)
+ * ---------------------------------------------------------------------------
+ *   --hero-overlay       the whole scrim gradient (linear-gradient: angle and
+ *                        stops). Default in derived.css
+ *
+ * Custom theme (in your own CSS, after blush.css)
+ * -----------------------------------------------
+ * Declare it in `@layer theme`, next to the built-in themes: a theme has the
+ * same specificity as the formulas in derived.css, so source order decides
+ * and your values win. Apply it with `data-theme="sand"` on `<html>` or on
+ * any container; nested themes repaint their own surface and text.
+ *
+ *   @layer theme {
+ *     [data-theme="sand"] {
+ *         --color-accent: oklch(60% 0.12 60);
+ *         --color-surface: oklch(96% 0.02 85);
+ *         --color-text: oklch(25% 0.03 60);
+ *         --color-contrast: oklch(100% 0 0);
+ *         --color-invalid: oklch(55% 0.18 28);
+ *         --color-valid: oklch(51% 0.13 149);
+ *         --color-warning: oklch(51% 0.11 73);
+ *         --radius-control: .3rem;
+ *
+ *         --color-border: oklch(80% 0.03 80);
+ *         --color-field: oklch(98% 0.015 85);
+ *
+ *         --font-heading: "Fraunces", Georgia, serif;
+ *         --font-hero: "Playfair Display", Georgia, serif;
+ *
+ *         --hero-overlay: linear-gradient(90deg, oklch(96% 0.02 85 / .8) 30%, transparent);
+ *     }
+ *   }
+ *
+ * In this example `--color-border` and `--color-field` are hand-picked
+ * derived tokens, `--font-heading` sets every heading (the hero follows it),
+ * `--font-hero` then changes only <header role="banner">, `--hero-overlay` replaces
+ * the hero scrim, and every derived token not listed keeps its default formula.
+ *
+ * Contrast
+ * --------
+ * Every built-in theme meets WCAG AA on the pairs Blush paints: 4.5:1 for
+ * text, accent links, status text and labels on filled buttons
+ * (`--color-contrast` on accent, valid, invalid and warning), 3:1 for field
+ * borders. That is why light uses an amber-brown warning rather than a pure
+ * yellow, and why accent pairs a deep rose surface with light fills and dark
+ * button labels: a mid-tone surface cannot carry both white text and status
+ * colors. A custom theme should keep the same floors.
+ *
+ * Layer: theme
+ */
+@layer theme {
+  :root,
+  [data-theme='light'] {
+    --color-accent: oklch(56% 0.16 20);
+    --color-surface: oklch(98.5% 0.008 20);
+    --color-text: oklch(25% 0.03 20);
+    --color-contrast: oklch(100% 0 0);
+    --color-invalid: oklch(55% 0.19 27);
+    --color-valid: oklch(52% 0.13 150);
+    --color-warning: oklch(54% 0.12 65);
+    --color-heading: oklch(20% 0.04 20);
+    --radius-control: 0.6rem;
+    --color-accent-soft: color-mix(
+      in oklab,
+      oklch(56% 0.16 20) 15%,
+      var(--color-surface)
+    );
+  }
+
+  [data-theme='dark'] {
+    --color-accent: oklch(68% 0.15 20);
+    --color-surface: oklch(17% 0.025 20);
+    --color-text: oklch(96% 0.01 20);
+    --color-contrast: oklch(18% 0.02 20);
+    --color-invalid: oklch(71% 0.16 22);
+    --color-valid: oklch(78% 0.14 148);
+    --color-warning: oklch(86% 0.13 85);
+    --color-heading: oklch(92% 0.015 20);
+    --radius-control: 0.6rem;
+    --color-accent-soft: color-mix(
+      in oklab,
+      oklch(68% 0.15 20) 20%,
+      var(--color-surface)
+    );
+  }
+
+  [data-theme='accent'] {
+    --color-accent: oklch(94% 0.03 20);
+    --color-surface: oklch(50% 0.15 20);
+    --color-text: oklch(99% 0.005 20);
+    --color-contrast: oklch(28% 0.07 20);
+    --color-invalid: oklch(90% 0.07 25);
+    --color-valid: oklch(92% 0.08 150);
+    --color-warning: oklch(93% 0.09 85);
+    --color-heading: oklch(100% 0 0);
+    --color-muted: oklch(91% 0.03 20);
+    --radius-control: 0.6rem;
+    --color-accent-soft: color-mix(
+      in oklab,
+      oklch(25% 0.08 20) 30%,
+      var(--color-surface)
+    );
+  }
+}

@@ -1,0 +1,173 @@
+/**
+ * SEMANTIC / buttons
+ *
+ * Styles `button`, `[role="button"]`, `input[type=submit|button|reset]` and
+ * the native file selector. No classes are needed: a plain button is a
+ * filled accent button.
+ *
+ * Variable contract
+ * -----------------
+ * Every color of a button is read from a few custom properties set on the
+ * button itself. They are the hooks the utilities use to change the look
+ * without knowing anything about this file's selectors:
+ *
+ *   --btn-tone          base color. Defaults to `--tone`, then to the accent.
+ *   --btn-bg            fill
+ *   --btn-fg            text
+ *   --btn-border        border
+ *   --btn-bg-hover      fill on hover: the base tone darkened by 12% (mixed with black)
+ *   --btn-border-hover  border on hover
+ *   --btn-ring          keyboard focus outline
+ *
+ * `--tone` is set by .positive / .negative / .warning (utilities/tone.css);
+ * the shape comes from .outlined (utilities/outlined.css). Because both only
+ * assign variables they compose in any order: `class="outlined positive"`.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   aria-pressed="true" | aria-selected="true" | aria-current   highlighted ring
+ *   disabled | aria-disabled="true" | fieldset[disabled]        dimmed, inert
+ *   aria-busy="true"                                              see busy.css
+ *
+ * Primary and secondary actions
+ * ------------------------------
+ * A form has one primary action: the submit button, which stays filled with
+ * the accent. Every other button is a secondary action and gets the neutral
+ * (muted) surface by default:
+ *
+ *   - `input[type=reset]` and the file selector, anywhere
+ *   - inside a `<form>`: `button[type=button]`, `button[type=reset]`,
+ *     `input[type=button]` and `[role=button]` (e.g. a "Cancel" link)
+ *
+ * A `<button>` without a `type` attribute is a submit button by the HTML
+ * specification, so it stays filled. To fill a neutral button with the
+ * current tone, add `.accent` (utilities/tone.css).
+ *
+ * The file selector is also a form control, so its border is the one of the
+ * fields (`--color-field-border`, and `-hover`), not the neutral button border.
+ *
+ * Reads:  --tone, --color-accent/contrast/text/surface/field-border,
+ *         --radius-control
+ * Inside [role="group"] the layout is handled by group.css.
+ * Layer:  components
+ */
+@layer components {
+  /* -------------------------------------------------------------
+       1. Base: filled button in the current tone
+       ------------------------------------------------------------- */
+  button,
+  [role='button'],
+  input[type='submit'],
+  input[type='button'],
+  input[type='reset'],
+  input[type='file']::file-selector-button {
+    --btn-tone: var(--tone, var(--color-accent));
+    --btn-bg: var(--btn-tone);
+    --btn-fg: var(--color-contrast);
+    --btn-border: var(--btn-tone);
+    --btn-bg-hover: color-mix(in oklab, var(--btn-tone) 88%, black);
+    --btn-border-hover: var(--btn-bg-hover);
+    --btn-ring: color-mix(in oklab, var(--btn-tone) 35%, transparent);
+
+    @apply inline-flex items-center justify-center gap-2
+            m-0 min-h-11 px-5 py-2.5
+            rounded-[var(--radius-control)]
+            font-semibold text-base leading-normal text-center select-none no-underline
+            cursor-pointer transition-all duration-150 ease-out shadow-xs
+
+            bg-[color:var(--btn-bg)] text-[color:var(--btn-fg)] border border-[color:var(--btn-border)]
+
+            hover:bg-[color:var(--btn-bg-hover)] hover:border-[color:var(--btn-border-hover)]
+            hover:shadow-sm
+            active:scale-[0.98] active:brightness-90
+
+            focus-visible:outline-3 focus-visible:outline-offset-2
+            focus-visible:outline-[color:var(--btn-ring)];
+  }
+
+  /* The native file selector sits next to the file name. */
+  input[type='file']::file-selector-button {
+    @apply me-4 rounded-[calc(var(--radius-control)-2px)];
+    border: None;
+  }
+
+  /* A nested `&:hover` cannot target a pseudo-element, so the hover state of
+       the file selector is stated explicitly. */
+  input[type='file']::file-selector-button:hover {
+    background-color: var(--btn-bg-hover);
+    border: None;
+  }
+
+  /* -------------------------------------------------------------
+       2. Neutral surface for secondary actions: reset, file selector and
+          every non-submit button inside a form. The same set of --btn-*
+          variables backs the .muted utility; .accent turns them back into tone-filled
+          buttons.
+       ------------------------------------------------------------- */
+  input[type='reset'],
+  input[type='file']::file-selector-button,
+  form
+    :is(
+      button[type='button'],
+      button[type='reset'],
+      input[type='button'],
+      [role='button']
+    ) {
+    --btn-bg: color-mix(in oklab, var(--color-text) 8%, var(--color-surface));
+    --btn-fg: var(--color-text);
+    --btn-border: color-mix(
+      in oklab,
+      var(--color-text) 20%,
+      var(--color-surface)
+    );
+    --btn-bg-hover: color-mix(
+      in oklab,
+      var(--color-text) 15%,
+      var(--color-surface)
+    );
+    --btn-border-hover: color-mix(
+      in oklab,
+      var(--color-text) 30%,
+      var(--color-surface)
+    );
+    --btn-ring: color-mix(in oklab, var(--color-text) 25%, transparent);
+  }
+
+  /* The file selector borders like the fields next to it. */
+  input[type='file']::file-selector-button {
+    --btn-border: var(--color-field-border);
+    --btn-border-hover: var(--color-field-border-hover);
+  }
+
+  /* -------------------------------------------------------------
+       3. ARIA states: pressed, selected, current
+       ------------------------------------------------------------- */
+  :is(button, [role='button'])[aria-pressed='true'],
+  :is(button, [role='button'])[aria-selected='true'],
+  :is(button, [role='button']):is([aria-current]:not([aria-current='false'])) {
+    --tw-ring-offset-color: var(--color-surface);
+    @apply brightness-90 ring-2 ring-[color:var(--btn-tone)] ring-offset-2;
+  }
+
+  /* -------------------------------------------------------------
+       4. Disabled: native, ARIA and inherited from a fieldset
+       ------------------------------------------------------------- */
+  button:disabled,
+  input:disabled,
+  [role='button'][aria-disabled='true'],
+  [aria-disabled='true'] :is(button, [role='button'], input),
+  fieldset[disabled] :is(button, [role='button'], input) {
+    @apply opacity-50 pointer-events-none cursor-not-allowed shadow-none
+            scale-100 filter-none;
+  }
+
+  /* -------------------------------------------------------------
+       5. Inline SVG icons follow the text size
+       ------------------------------------------------------------- */
+  :is(button, [role='button']) > svg {
+    flex-shrink: 0;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+  }
+}

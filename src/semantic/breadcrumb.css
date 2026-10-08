@@ -1,0 +1,81 @@
+/**
+ * SEMANTIC / breadcrumb
+ *
+ * Breadcrumb trail for `nav[role="breadcrumb"]` (or, equivalently,
+ * `nav[aria-label="Breadcrumb"]`). No classes are needed.
+ *
+ * Variable contract
+ * -----------------
+ *   --crumb-max     max width of a single item before it is truncated
+ *                   (default 12rem). Pass a value or leave it empty/unset
+ *                   if you do not want any width restriction.
+ *   --crumb-sep     text separator, as a CSS string (default ">"). Any glyph
+ *                   works ("/", "›", "→", "·"); "" hides it.
+ *
+ * Layer:  components
+ */
+@layer components {
+
+    nav:is([role="breadcrumb"], [aria-label="Breadcrumb" i]) > ol {
+        @apply flex flex-wrap items-center gap-0 py-1;
+
+        /* ---------------------------------------------------------
+           1. Items: flexible elements that wrap if necessary
+           --------------------------------------------------------- */
+        & > li {
+            @apply flex items-center;
+        }
+
+        & > li + li::before {
+            @apply px-1;
+            /* The empty alt text keeps the glyph out of the accessibility tree. */
+            content: var(--crumb-sep, ">") / "";
+            color: var(--crumb-sep-color, var(--color-muted));
+        }
+
+        /* Icon separator: 0x0 (nothing painted) until --crumb-sep-size is set. */
+        & > li + li::after {
+            @apply shrink-0;
+            order: -1;
+            content: "";
+            width: var(--crumb-sep-size, 0);
+            height: var(--crumb-sep-size, 0);
+            background-color: var(--crumb-sep-color, var(--color-muted));
+            -webkit-mask: var(--crumb-sep-icon, none) center / contain no-repeat;
+            mask: var(--crumb-sep-icon, none) center / contain no-repeat;
+        }
+
+        /* ---------------------------------------------------------
+           2. Root item (Home): left-aligned with natural hover
+           --------------------------------------------------------- */
+        & > li:first-child {
+            & > :is(a, span) {
+                @apply px-3 py-2;
+                margin-inline-start: -0.75rem; /* Compensates for padding to align text with paragraphs */
+                color: var(--color-accent);
+            }
+        }
+
+        /* ---------------------------------------------------------
+           3. Labels: truncated only if --crumb-max is set
+           --------------------------------------------------------- */
+        & > li > :is(a, span) {
+            @apply block;
+            /* If --crumb-max is defined, apply truncation, otherwise let the text flow */
+            max-width: var(--crumb-max, none);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* The current page as plain text has the box of a link. */
+        & > li > span {
+            @apply px-3 py-2;
+        }
+
+        & > li > :is(a, span)[aria-current]:not([aria-current="false"]) {
+            @apply font-semibold;
+            color: var(--color-heading);
+        }
+    }
+}

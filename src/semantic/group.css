@@ -1,0 +1,104 @@
+/**
+ * SEMANTIC / group
+ *
+ * `[role="group"]`: buttons, inputs and selects fused into a single bar
+ * (stepper, input + button, segmented control), and `fieldset[role="group"]`
+ * for controls on one row.
+ *
+ *   <div role="group">
+ *     <button aria-label="Decrease">-</button>
+ *     <input type="number" value="1">
+ *     <button aria-label="Increase">+</button>
+ *   </div>
+ *
+ * The stepper is recognised by structure, not by a class: a button that sits
+ * next to a number input gets the compact square sizing and the border of the
+ * form fields (--color-field-border), the same as the number input itself.
+ *
+ * Semantic states (no class involved)
+ *   aria-pressed="true" | aria-selected="true" | aria-current   inset ring on the child
+ *   :focus-visible                                               the child rises above its neighbors
+ *
+ * Reads:  --color-accent/surface/field-border, --radius-control
+ * Depends on buttons.css and forms/fields.css only for the elements it holds.
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Container
+       ------------------------------------------------------------- */
+    [role="group"] {
+        @apply inline-flex items-center rounded-[var(--radius-control)];
+    }
+
+    /* -------------------------------------------------------------
+       2. Children: square corners except at the ends; borders are shared (1px)
+       ------------------------------------------------------------- */
+    [role="group"] > :is(button, [role="button"], input, select) {
+        @apply relative rounded-none first:rounded-s-[var(--radius-control)] last:rounded-e-[var(--radius-control)];
+    }
+
+    [role="group"] > :not(:first-child) {
+        margin-inline-start: -1px;
+    }
+
+    /* No bottom margin and a uniform height (fields carry mb-4 and min-h-11). */
+    [role="group"] > input:not([type="checkbox"], [type="radio"]),
+    [role="group"] > select,
+    [role="group"] > button,
+    [role="group"] > [role="button"] {
+        @apply mb-0 min-h-11 h-full;
+    }
+
+    /* -------------------------------------------------------------
+       3. States: the focused or active child sits above its neighbors' borders
+       ------------------------------------------------------------- */
+    [role="group"] > :is(button, [role="button"], input):focus-visible {
+        @apply z-20;
+    }
+
+    [role="group"] > :is(button, [role="button"]):is(
+        [aria-pressed="true"],
+        [aria-selected="true"],
+        [aria-current]:not([aria-current="false"])
+    ) {
+        /* An inset ring highlights the child without breaking the shared divider. */
+        @apply z-10 brightness-95 ring-2 ring-[color:var(--color-accent)] ring-inset ring-offset-0;
+    }
+
+    /* -------------------------------------------------------------
+       4. Stepper: [-] [number] [+]
+       ------------------------------------------------------------- */
+    [role="group"] > input[type="number"] {
+        @apply text-center font-semibold px-2 w-16 shrink-0 rounded-none m-0 py-2.5 min-h-11 box-border;
+
+        /* Same height as the buttons; the side borders come from the buttons. */
+        align-self: stretch;
+        height: auto;
+        border-left: 0;
+        border-right: 0;
+
+        /* Top and bottom borders match the stepper buttons: the field border. */
+        border-top: 1px solid var(--color-field-border);
+        border-bottom: 1px solid var(--color-field-border);
+        background-color: color-mix(in oklab, var(--color-accent) 4%, var(--color-surface));
+    }
+
+    /* Stepper buttons: the ones right before or right after a number input. */
+    [role="group"] > button:has(+ input[type="number"]),
+    [role="group"] > input[type="number"] + button {
+        /* Border of the form fields (same variables buttons.css reads). */
+        --btn-border: var(--color-field-border);
+        --btn-border-hover: var(--color-field-border-hover);
+
+        @apply px-3.5 font-bold min-w-11 inline-flex items-center justify-center self-stretch h-auto;
+    }
+
+    /* -------------------------------------------------------------
+       5. fieldset[role="group"]: controls on one row
+       ------------------------------------------------------------- */
+    fieldset[role="group"] {
+        @apply flex-row flex-wrap items-center gap-6;
+    }
+}

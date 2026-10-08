@@ -1,0 +1,47 @@
+/**
+ * THEME / tokens
+ *
+ * Registers the token names in Tailwind so that the matching utilities exist
+ * (`bg-accent`, `text-muted`, `border-border`, `rounded-control`, ...).
+ *
+ * `@theme static` makes Tailwind emit every token even when no utility uses
+ * it directly; the Blush modules read them through `var()`.
+ *
+ * Values do NOT live here. `unset` is only a placeholder:
+ *   - public tokens are set by each theme       (themes.css)
+ *   - derived tokens are computed by default    (derived.css)
+ *
+ * Only the tokens below are registered. The other derived tokens
+ * (`--color-heading`, the form, choice and range families), the font tokens
+ * `--font-text` / `--font-heading` / `--font-hero`, `--hero-overlay` and
+ * `--icon-*` are plain custom properties read through `var()`: they have no
+ * utility.
+ *
+ * `--font-sans` and `--font-mono` replace Tailwind's default stacks on purpose:
+ * plain system stacks, no emoji families.
+ *
+ * Layer: theme (via Tailwind `@theme`)
+ */
+@theme static {
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  --font-mono:
+    ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+
+  /* Public tokens: every theme sets them. */
+  --color-accent: unset;
+  --color-surface: unset;
+  --color-text: unset;
+  --color-contrast: unset; /* text on top of accent / valid / invalid */
+  --color-invalid: unset;
+  --color-valid: unset;
+  --color-warning: unset;
+  --radius-control: unset;
+
+  /* Derived tokens: computed in derived.css, overridable by any theme. */
+  --color-muted: unset;
+  --color-border: unset;
+  --color-surface-soft: unset;
+  --color-accent-soft: unset;
+}

@@ -1,0 +1,67 @@
+/**
+ * SEMANTIC / media
+ *
+ * Embedded content: `figure` and `figcaption`, `picture`, `iframe` and
+ * `embed`. No classes are needed.
+ *
+ * `img` and `video` are already reset by Tailwind's preflight (`display: block`,
+ * `max-width: 100%`, `height: auto`), so they are not repeated here.
+ *
+ *   figure      block without the browser's side margins
+ *   figcaption  small, muted, centered text below the media; above it when it
+ *               is the first child
+ *   picture     block, never wider than its parent
+ *   iframe,     full width, a default 16:9 ratio to avoid layout shift, and a
+ *   embed       discreet border. A `height` attribute or style wins over the
+ *               ratio, because Blush never sets `height` here.
+ *
+ * Not to be confused with utilities/media.css, which stacks content over media
+ * (`.cover`, `.overlay`).
+ *
+ * Reads:  --color-text/muted/surface, --radius-control
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Figure and caption
+       ------------------------------------------------------------- */
+    figure {
+        display: block;
+        margin-inline: 0;
+
+        figcaption {
+            padding-block-start: 0.5em;
+            font-size: 0.875em;
+            @apply leading-normal;
+            color: var(--color-muted);
+            text-align: center;
+            text-wrap: balance;
+
+            /* A caption placed before the media sits above it. */
+            &:first-child {
+                padding-block: 0 0.5em;
+            }
+        }
+    }
+
+    /* -------------------------------------------------------------
+       2. Picture
+       ------------------------------------------------------------- */
+    picture {
+        display: block;
+        max-width: 100%;
+    }
+
+    /* -------------------------------------------------------------
+       3. Iframe and embed
+       ------------------------------------------------------------- */
+    iframe,
+    embed {
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: 16 / 9;
+        border: 1px solid color-mix(in oklab, var(--color-text) 15%, var(--color-surface));
+        border-radius: var(--radius-control);
+    }
+}

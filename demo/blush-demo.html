@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="en" data-theme="blush">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Blush CSS: the full component demo</title>
+    <meta
+      name="description"
+      content="Every Blush CSS element on one page: plain, semantic HTML that looks right out of the box, with classes that only add layout and tone."
+    />
+    <meta name="author" content="Maurizio Melani" />
+    <link rel="author" href="mailto:maurizio@forwalk.org" />
+    <link
+      rel="license"
+      href="https://github.com/forwalk-org/blush-css/blob/main/LICENSE"
+    />
+    <link rel="icon" href="../assets/favicon.png" type="image/png" />
+    <!-- This page is built with Blush itself -->
+
+    <link rel="stylesheet" href="../dist/blush.css" />
+    <!-- Theme editor: stand-alone, reads the themes from the stylesheets above -->
+    <script src="blush-theme-editor.js"></script>
+
+    <style>
+      /* Page layer: only what Blush does not provide */
+      :root {
+        --layout-width: 70rem;
+        --layout-gutter: clamp(1.25rem, 5vw, 3rem);
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        html {
+          scroll-behavior: smooth;
+        }
+      }
+      .section {
+        margin-block: 0;
+        padding-block: clamp(3.5rem, 8vw, 6.5rem);
+        border-top: 1px solid var(--color-border);
+        scroll-margin-top: 1rem;
+      }
+      .section > .stack {
+        --layout-gap: clamp(2rem, 4vw, 3.5rem);
+      }
+      .section > .stack > * {
+        --layout-gap: 1.5rem;
+      }
+      .section > .stack > * > * {
+        --layout-gap: 1rem;
+      }
+      .section > .wrapper > hgroup {
+        max-width: 44rem;
+      }
+
+      /* Nav menu: on small screens the list becomes a dropdown, CSS only. */
+      .nav-menu > input {
+        display: none;
+      }
+      @media (max-width: 78rem) {
+        .nav-menu {
+          position: relative;
+        }
+        .nav-menu > input[type='checkbox'] {
+          display: block;
+          appearance: none;
+          flex: none;
+          width: 2.5rem;
+          height: 2.5rem;
+          margin: 0;
+          padding: 0;
+          border: 0;
+          border-radius: var(--radius-control, 0.6rem);
+          box-shadow: none;
+          color: inherit;
+          cursor: pointer;
+          background:
+            linear-gradient(currentColor 0 0) center 30% / 1.25rem 2px no-repeat,
+            linear-gradient(currentColor 0 0) center / 1.25rem 2px no-repeat,
+            linear-gradient(currentColor 0 0) center 70% / 1.25rem 2px no-repeat;
+        }
+        .nav-menu > input:checked {
+          background:
+            linear-gradient(
+                45deg,
+                transparent calc(50% - 1px),
+                currentColor calc(50% - 1px) calc(50% + 1px),
+                transparent calc(50% + 1px)
+              )
+              center / 1.25rem 1.25rem no-repeat,
+            linear-gradient(
+                -45deg,
+                transparent calc(50% - 1px),
+                currentColor calc(50% - 1px) calc(50% + 1px),
+                transparent calc(50% + 1px)
+              )
+              center / 1.25rem 1.25rem no-repeat;
+        }
+        .nav-menu > input::before,
+        .nav-menu > input::after {
+          content: none;
+        }
+        .nav-menu > input:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+        .nav-menu > ul {
+          display: none;
+          position: absolute;
+          inset-inline: 0;
+          top: 100%;
+          z-index: 10;
+          flex-direction: column;
+          flex-wrap: nowrap;
+          gap: 0.25rem;
+          margin: 0;
+          padding: 0.5rem;
+          background: var(--color-surface);
+          color: var(--color-text);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-control, 0.6rem);
+        }
+        .nav-menu > input:checked ~ ul {
+          display: flex;
+        }
+        .nav-menu > ul a {
+          display: block;
+          padding: 0.6rem 0.75rem;
+        }
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0;
+        background: none;
+        border: 0;
+        box-shadow: none;
+        color: inherit;
+        text-decoration: none;
+      }
+      .brand:is(:hover, :focus-visible) {
+        background: none;
+      }
+      .brand img {
+        height: 2.4rem;
+        width: auto;
+      }
+      .tile {
+        aspect-ratio: 4/3;
+        border-radius: 0.85rem;
+        --overlay-padding: 1rem;
+      }
+      .tile:not(:has(> .cover)) {
+        display: grid;
+        place-content: center;
+        text-align: center;
+        border: 1px solid var(--color-border);
+      }
+      .scroll-x,
+      pre {
+        overflow-x: auto;
+      }
+
+      /* Demo only */
+      .demo-box {
+        --layout-gap: 1rem;
+        padding: 1.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: 0.85rem;
+      }
+      .full {
+        grid-column: 1 / -1;
+      }
+    </style>
+  </head>
+  <body>
+    <header role="banner" id="top" style="--hero-min-height: min(90vh, 80rem)">
+      <nav aria-label="Main" class="nav-menu">
+        <a
+          class="brand"
+          href="../index.html"
+          aria-label="Blush CSS: home"
+          title="Blush CSS: home"
+        >
+          <img src="../assets/logo.png" alt="Blush CSS logo" /><strong
+            >Blush CSS</strong
+          >
+        </a>
+        <input
+          type="checkbox"
+          aria-label="Menu"
+          aria-controls="main-menu"
+          title="Menu"
+        />
+        <ul id="main-menu">
+          <li><a href="#philosophy">Philosophy</a></li>
+          <li><a href="#typography">Typography</a></li>
+          <li><a href="#tones">Tones</a></li>
+          <li><a href="#forms">Forms</a></li>
+          <li><a href="#containers">Containers</a></li>
+          <li><a href="#data">Data</a></li>
+          <li><a href="#busy">Busy</a></li>
+          <li><a href="#layout">Layout</a></li>
+          <li>
+            <a
+              href="https://github.com/forwalk-org/blush-css"
+              data-repo
+              role="button"
+              class="outlined"
+              title="Blush CSS on GitHub"
+              >GitHub</a
+            >
+          </li>
+        </ul>
+      </nav>
+
+      <img
+        src="https://images.unsplash.com/photo-1737276681566-bd86b399dafe?q=80&w=1170&auto=format&fit=crop"
+        alt=""
+        fetchpriority="high"
+      />
+      <div class="wrapper">
+        <hgroup>
+          <p>Plain HTML, styled</p>
+          <h1>Pretty &amp; semantic by default.</h1>
+        </hgroup>
+        <p>
+          Good HTML looks right out of the box; classes only add layout and
+          tone.
+        </p>
+        <nav aria-label="Hero actions">
+          <a href="../index.html#use" role="button">Get started</a>
+          <a
+            href="https://github.com/forwalk-org/blush-css"
+            data-repo
+            role="button"
+            class="outlined"
+            >View on GitHub</a
+          >
+        </nav>
+        <ul>
+          <li>No classes required for clean, semantic HTML</li>
+          <li>Three themes, one stylesheet, no JavaScript</li>
+          <li>Standalone, or the foundation of a Tailwind project</li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="philosophy">
+        <div class="wrapper">
+          <hgroup>
+            <p>The design philosophy</p>
+            <h2>Minimalist, spacious, semantic.</h2>
+            <p>
+              Semantic HTML should be naturally beautiful, without cluttering
+              tags with utility classes. Generous spacing and fluid typography
+              give it an airy feel; ARIA attributes and <code>role</code> drive
+              every visual state.
+            </p>
+          </hgroup>
+          <blockquote>
+            <p>Attributes say what it is. Classes say how it looks.</p>
+            <cite>The Blush rule</cite>
+          </blockquote>
+        </div>
+      </section>
+
+      <section class="section" id="typography">
+        <div class="wrapper">
+          <hgroup>
+            <p>Semantic defaults</p>
+            <h2>Fluid type, honest colors.</h2>
+            <p>Fluid scale and vertical rhythm, without a single class.</p>
+          </hgroup>
+
+          <h5>Headings</h5>
+          <h1>Heading 1</h1>
+          <h2>Heading 2</h2>
+          <h3>Heading 3</h3>
+          <h4>Heading 4</h4>
+          <h5>Heading 5</h5>
+          <h6>Heading 6</h6>
+
+          <h5>hgroup: eyebrow, title, subtitle</h5>
+          <hgroup>
+            <p>Eyebrow</p>
+            <h3>A title with its context</h3>
+            <p>The last paragraph becomes a muted, fluid subtitle.</p>
+          </hgroup>
+
+          <h5>Inline text</h5>
+          <p>
+            A paragraph with a <a href="#typography">link</a>,
+            <strong>strong</strong> and <em>emphasis</em>,
+            <small>small print</small>, a <mark>highlight</mark>, an
+            <abbr title="HyperText Markup Language">HTML</abbr> abbreviation,
+            <ins>an insertion</ins>, <del>a deletion</del>,
+            <code>inline code</code>, <kbd>Ctrl</kbd> + <kbd>K</kbd>, program
+            output <samp>Build complete</samp>, H<sub>2</sub>O and
+            x<sup>2</sup>. Published
+            <time datetime="2026-10-05">5 October 2026</time>, product
+            <data value="398">Trail Guide</data>, and he said
+            <q>native quotes follow the language</q>, citing
+            <cite>The Walker's Handbook</cite>.
+          </p>
+          <p>
+            Tones color any inline text: status
+            <strong class="positive">connected</strong>, storage
+            <span class="warning">85% full</span>, system
+            <span class="negative">offline</span>, a
+            <a href="#tones" class="accent">special link</a> and
+            <small class="muted">updated 2m ago</small>.
+          </p>
+
+          <h5>Long-form reading</h5>
+          <article>
+            <hgroup>
+              <p>Field notes</p>
+              <h3>Why measure matters</h3>
+              <p>
+                Text in <code>main</code> and <code>article</code> stops at a
+                readable line length.
+              </p>
+            </hgroup>
+            <p>
+              Long lines tire the eye. Blush caps paragraphs, lists and quotes
+              at
+              <code>--measure</code> (65ch by default), so a page of prose stays
+              comfortable on a wide screen while headings, figures, tables and
+              grids keep the full width.
+            </p>
+            <p>
+              Change the dial on any container:
+              <code>style="--measure: 48ch"</code>. The vertical rhythm between
+              blocks follows the type scale, so spacing never needs a utility.
+            </p>
+            <blockquote>
+              <p>
+                Generous spacing is not decoration. It is how a page breathes.
+              </p>
+              <cite>Design note</cite>
+            </blockquote>
+            <address>
+              Blush Studio<br />12 Trail Lane, Florence<br /><a
+                href="#typography"
+                >hello@example.com</a
+              >
+            </address>
+          </article>
+
+          <h5>Lists</h5>
+          <div class="auto-grid" style="--layout-min: 14rem">
+            <div>
+              <h6>Unordered</h6>
+              <ul>
+                <li>Semantic first</li>
+                <li>
+                  Utilities second
+                  <ul>
+                    <li>
+                      Nested item
+                      <ul>
+                        <li>Third level</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li>Tokens throughout</li>
+              </ul>
+            </div>
+            <div>
+              <h6>Ordered</h6>
+              <ol>
+                <li>Write semantic HTML</li>
+                <li>Add state attributes</li>
+                <li>
+                  Add a class if needed
+                  <ol>
+                    <li>Tone</li>
+                    <li>Shape</li>
+                  </ol>
+                </li>
+              </ol>
+            </div>
+            <div>
+              <h6>Definitions</h6>
+              <dl>
+                <dt>Attribute</dt>
+                <dd>What something is, or its state.</dd>
+                <dt>Class</dt>
+                <dd>How it looks.</dd>
+              </dl>
+            </div>
+          </div>
+
+          <h5>Code</h5>
+          <pre><code>&lt;p class="positive"&gt;Payment received.&lt;/p&gt;
+&lt;button class="outlined negative"&gt;Delete account&lt;/button&gt;</code></pre>
+
+          <h5>Table</h5>
+          <div class="scroll-x">
+            <table>
+              <caption>
+                The three active layers
+              </caption>
+              <thead>
+                <tr>
+                  <th>Layer</th>
+                  <th>Holds</th>
+                  <th>Classes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>theme</td>
+                  <td>tokens, themes, icons</td>
+                  <td>none</td>
+                </tr>
+                <tr>
+                  <td>components</td>
+                  <td>semantic styles</td>
+                  <td>none</td>
+                </tr>
+                <tr>
+                  <td>utilities</td>
+                  <td>tone, shape, layout, media</td>
+                  <td>opt-in</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td>Total</td>
+                  <td>3 layers (+ base)</td>
+                  <td>opt-in only</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <h5>Figure, picture, iframe</h5>
+          <div class="auto-grid" style="--layout-min: 16rem">
+            <figure>
+              <svg
+                class="accent"
+                viewBox="0 0 400 120"
+                role="img"
+                aria-label="Mountain silhouette"
+              >
+                <rect
+                  width="400"
+                  height="120"
+                  fill="currentColor"
+                  opacity=".25"
+                />
+                <path
+                  d="M0 120 L90 30 L160 90 L250 20 L400 120Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <figcaption>
+                A figure with its caption, small and muted.
+              </figcaption>
+            </figure>
+            <picture>
+              <img
+                src="https://images.unsplash.com/photo-1515688594390-b649af70d282?q=60&w=600&auto=format&fit=crop"
+                alt="Mountain landscape"
+                loading="lazy"
+              />
+            </picture>
+            <iframe
+              title="Embedded page"
+              srcdoc="<p style='font-family:sans-serif;padding:1rem'>An iframe, with the ratio and border Blush gives it.</p>"
+            ></iframe>
+          </div>
+          <h5>Breadcrumb (<code>nav[role="breadcrumb"]</code>)</h5>
+          <nav role="breadcrumb" aria-label="Breadcrumb">
+            <ol>
+              <li><a href="#top">Home</a></li>
+              <li><a href="#layout">Docs</a></li>
+              <li><a href="#layout">Components</a></li>
+              <li><span aria-current="page">Breadcrumb</span></li>
+            </ol>
+          </nav>
+          <p>
+            In a narrow space the trail scrolls sideways: the root stays
+            pinned and accented, long labels get an ellipsis, and both ends
+            fade out.
+          </p>
+          <nav
+            role="breadcrumb"
+            aria-label="Breadcrumb, deep hierarchy"
+            style="max-width: 22rem"
+          >
+            <ol>
+              <li><a href="#top">Home</a></li>
+              <li><a href="#layout">Documentation</a></li>
+              <li><a href="#layout">Components</a></li>
+              <li><a href="#layout">Navigation and wayfinding</a></li>
+              <li>
+                <a href="#layout" title="A rather long section title">A rather long section title</a>
+              </li>
+              <li><span aria-current="page">Breadcrumb</span></li>
+            </ol>
+          </nav>
+          <p>
+            Dials: <code>--crumb-sep</code> (default <code>&gt;</code>),
+            <code>--crumb-max</code>.
+          </p>
+          <nav
+            role="breadcrumb"
+            aria-label="Breadcrumb, custom separator"
+            style="--crumb-sep: '/'; --crumb-max: 7rem"
+          >
+            <ol>
+              <li><a href="#top">Home</a></li>
+              <li><a href="#layout">Documentation</a></li>
+              <li><a href="#layout">Components</a></li>
+              <li><span aria-current="page">A very long current page title</span></li>
+            </ol>
+          </nav>
+
+          <h5>Horizontal rule</h5>
+          <p>A thematic break takes the page rhythm and a discreet line.</p>
+          <hr />
+          <p>
+            The color follows the theme; <code>--hr-color</code> changes it.
+          </p>
+          <hr style="--hr-color: var(--color-accent)" />
+          <p>Back to text.</p>
+        </div>
+      </section>
+
+      <section class="section" id="tones">
+        <div class="wrapper">
+          <hgroup>
+            <p>Tone and shape</p>
+            <h2>Classes only add tone.</h2>
+            <p>
+              Tone classes set <code>--tone</code> (it never leaks to children).
+              On a button the tone is the fill; on any other element it is the
+              text color.
+            </p>
+          </hgroup>
+
+          <h5>Tones</h5>
+          <div class="cluster">
+            <button>Default</button><button class="positive">Positive</button
+            ><button class="negative">Negative</button
+            ><button class="warning">Warning</button
+            ><button class="muted">Muted</button>
+          </div>
+          <h5>Outlined (shape) combines with any tone</h5>
+          <div class="cluster">
+            <button class="outlined">Default</button
+            ><button class="outlined positive">Positive</button
+            ><button class="outlined negative">Negative</button
+            ><button class="outlined warning">Warning</button
+            ><button class="outlined muted">Muted</button>
+          </div>
+          <p class="muted">
+            <small
+              ><code>.outlined</code> comes after the tone classes in the
+              cascade, so it also wins over <code>.muted</code> and
+              <code>.accent</code>.</small
+            >
+          </p>
+
+          <h5>Text color</h5>
+          <p class="positive">.positive paragraph</p>
+          <p class="warning">.warning paragraph</p>
+          <p class="negative">.negative paragraph</p>
+          <p class="accent">.accent paragraph</p>
+          <p class="muted">.muted paragraph</p>
+          <div class="demo-box negative">
+            <p>
+              A tone on a container colors the text it contains (plain CSS
+              inheritance)…
+            </p>
+            <button>…but the button inside keeps its own readable text.</button>
+          </div>
+
+          <h5>
+            Inside a form: secondary buttons start neutral,
+            <code>.accent</code> fills them again
+          </h5>
+          <form class="cluster" onsubmit="return false">
+            <button type="submit">Submit (primary)</button>
+            <button type="button">Cancel (neutral)</button>
+            <button type="button" class="accent">Accent</button>
+            <input type="reset" value="Reset" />
+          </form>
+
+          <h5>Native ARIA &amp; interactive states</h5>
+          <div class="cluster">
+            <button aria-pressed="true">Pressed</button>
+            <button aria-busy="true">Saving</button>
+            <button disabled>Disabled</button>
+            <button aria-disabled="true">aria-disabled</button>
+            <a href="#tones" role="button">Link as button</a>
+            <button id="expand" aria-expanded="false">
+              Options
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="4 6 8 10 12 6" />
+              </svg>
+            </button>
+            <input type="submit" value="Submit" /><input
+              type="reset"
+              value="Reset"
+            />
+          </div>
+
+          <h5>Groups: segmented control, input + button</h5>
+          <div class="cluster">
+            <div role="group" aria-label="View">
+              <button aria-pressed="true">Day</button
+              ><button aria-pressed="false">Week</button
+              ><button aria-pressed="false">Month</button>
+            </div>
+            <div role="group" aria-label="Subscribe">
+              <input
+                type="email"
+                placeholder="you@example.com"
+                aria-label="Email"
+              /><button>Subscribe</button>
+            </div>
+          </div>
+
+          <h5>Navigation states</h5>
+          <nav aria-label="Demo">
+            <ul>
+              <li><a href="#tones" aria-current="page">Current page</a></li>
+              <li><a href="#forms">Link</a></li>
+              <li><a href="#forms" aria-disabled="true">Disabled</a></li>
+            </ul>
+          </nav>
+        </div>
+      </section>
+
+      <section class="section" id="forms">
+        <div class="wrapper">
+          <hgroup>
+            <p>Plain HTML, styled</p>
+            <h2>Forms that need no classes.</h2>
+            <p>
+              Validation is expressed with <code>aria-invalid</code>, never a
+              class.
+            </p>
+          </hgroup>
+          <form
+            class="auto-grid"
+            style="--layout-min: 16rem"
+            onsubmit="return false"
+          >
+            <div>
+              <label for="n">Name</label
+              ><input id="n" placeholder="Ada Lovelace" />
+            </div>
+            <div>
+              <label for="e">Email (valid)</label
+              ><input
+                id="e"
+                type="email"
+                value="ada@example.com"
+                aria-invalid="false"
+              /><small>Looks good.</small>
+            </div>
+            <div>
+              <label for="p">Password (error)</label
+              ><input
+                id="p"
+                type="password"
+                value="123"
+                aria-invalid="true"
+              /><small>At least 8 characters.</small>
+            </div>
+            <div>
+              <label for="s">Search</label
+              ><input id="s" type="search" placeholder="Search" />
+            </div>
+            <div><label for="d">Date</label><input id="d" type="date" /></div>
+            <div><label for="t">Time</label><input id="t" type="time" /></div>
+            <div>
+              <label for="sel">Select</label
+              ><select id="sel">
+                <option>One</option>
+                <option>Two</option>
+              </select>
+            </div>
+            <div>
+              <label for="selm">Select (multiple)</label
+              ><select id="selm" multiple>
+                <option>One</option>
+                <option>Two</option>
+                <option>Three</option>
+              </select>
+            </div>
+            <div><label for="f">File</label><input id="f" type="file" /></div>
+            <div>
+              <label for="dis">Disabled</label
+              ><input id="dis" value="Disabled" disabled />
+            </div>
+            <div>
+              <label for="q">Quantity (stepper)</label>
+              <div role="group">
+                <button
+                  type="button"
+                  aria-label="Decrease"
+                  onclick="q.stepDown()"
+                >
+                  -</button
+                ><input id="q" type="number" value="1" min="0" /><button
+                  type="button"
+                  aria-label="Increase"
+                  onclick="q.stepUp()"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div class="full">
+              <label for="m">Message</label
+              ><textarea id="m" placeholder="Write something"></textarea>
+            </div>
+            <fieldset class="full">
+              <legend>Preferences</legend>
+              <label><input type="checkbox" checked /> Checkbox</label>
+              <label><input type="checkbox" /> Unchecked</label>
+              <label><input type="checkbox" id="ind" /> Indeterminate</label>
+              <label><input type="radio" name="r" checked /> Radio</label>
+              <label><input type="radio" name="r" /> Radio</label>
+              <label
+                ><input type="checkbox" role="switch" checked /> Switch</label
+              >
+              <label><input type="checkbox" role="switch" /> Switch off</label>
+              <label for="rg">Range</label
+              ><input id="rg" type="range" value="60" />
+            </fieldset>
+            <fieldset class="full" disabled>
+              <legend>Disabled fieldset (inherited by every control)</legend>
+              <label><input type="checkbox" checked /> Checkbox</label>
+              <input placeholder="Text" /><button type="button">Button</button>
+            </fieldset>
+          </form>
+        </div>
+      </section>
+
+      <section class="section" id="containers">
+        <div class="wrapper">
+          <hgroup>
+            <p>Native elements</p>
+            <h2>Details, dialog and menu.</h2>
+            <p>Styled as they are: no wrapper, no JavaScript framework.</p>
+          </hgroup>
+          <div>
+            <details open>
+              <summary>What is Blush?</summary>
+              <p>
+                A reset with superpowers: a classless CSS framework built on
+                Tailwind CSS v4.
+              </p>
+            </details>
+            <details>
+              <summary>Does it conflict with Tailwind?</summary>
+              <p>
+                No. Tailwind sits underneath: Blush's tokens are Tailwind
+                tokens, and its class names avoid Tailwind's.
+              </p>
+            </details>
+          </div>
+          <div class="cluster">
+            <button onclick="dlg.showModal()">Open modal dialog</button>
+            <button class="outlined" onclick="cookie.show()">
+              Show banner
+            </button>
+            <menu>
+              <li><button class="outlined">Copy</button></li>
+              <li><button class="outlined">Paste</button></li>
+              <li><button class="outlined negative">Delete</button></li>
+            </menu>
+          </div>
+          <menu role="menu" aria-label="Context menu">
+            <li><button role="menuitem">Rename</button></li>
+            <li><button role="menuitem">Duplicate</button></li>
+            <li>
+              <button role="menuitem" aria-selected="true">
+                Move to folder
+              </button>
+            </li>
+            <li>
+              <button role="menuitem" aria-disabled="true">Archive</button>
+            </li>
+          </menu>
+          <dialog id="dlg">
+            <h3>Delete the file?</h3>
+            <p>This cannot be undone.</p>
+            <footer data-theme="dark">
+              <p>
+                Blush CSS: a reset with superpowers. Built on Tailwind CSS v4.
+              </p>
+              <nav aria-label="Links">
+                <ul>
+                  <li>
+                    <a href="https://github.com/forwalk-org/blush-css" data-repo
+                      >GitHub</a
+                    >
+                  </li>
+                  <li><a href="../index.html">Home</a></li>
+                </ul>
+              </nav>
+            </footer>
+          </dialog>
+        </div>
+      </section>
+
+      <section class="section" id="data">
+        <div class="wrapper">
+          <hgroup>
+            <p>Data and feedback</p>
+            <h2>Progress, meter, notices.</h2>
+          </hgroup>
+          <div class="auto-grid" style="--layout-min: 16rem">
+            <div>
+              <label>Progress</label
+              ><progress value="40" max="100">40%</progress
+              ><progress class="positive" value="90" max="100">90%</progress
+              ><progress class="negative" value="20" max="100">20%</progress
+              ><progress>Loading</progress>
+            </div>
+            <div>
+              <label>Meter</label
+              ><meter value="0.9" low="0.3" high="0.7" optimum="1">90%</meter
+              ><meter value="0.5" low="0.3" high="0.7" optimum="1">50%</meter
+              ><meter value="0.1" low="0.3" high="0.7" optimum="1">10%</meter>
+            </div>
+          </div>
+          <p role="alert">The payment failed. Check the card number.</p>
+          <p role="status">Your draft was saved.</p>
+          <p role="status" class="positive">Profile updated.</p>
+          <p role="status" class="warning">Your plan expires in 3 days.</p>
+          <p role="alert" class="negative">Alert with an explicit tone.</p>
+        </div>
+      </section>
+
+      <section class="section" id="busy">
+        <div class="wrapper">
+          <hgroup>
+            <p>Accessibility and feedback</p>
+            <h2>Busy is an attribute.</h2>
+            <p>
+              Driven purely by <code>aria-busy="true"</code>, without loading
+              classes.
+            </p>
+          </hgroup>
+          <label
+            ><input
+              type="checkbox"
+              id="toggle-busy-all"
+              role="switch"
+              checked
+            />
+            Toggle <code>aria-busy</code> on the demo elements</label
+          >
+          <h5>Inline elements</h5>
+          <div class="cluster">
+            <button aria-busy="true">Loading</button>
+            <button class="outlined" aria-busy="true">Processing</button>
+            <button class="positive" aria-busy="true">Saving</button>
+            <a href="#busy" role="button" aria-busy="true">Updating link</a>
+            <button aria-busy="true" aria-label="Icon only spinner"></button>
+          </div>
+          <h5>Container elements</h5>
+          <div class="auto-grid" style="--layout-min: 16rem">
+            <form
+              aria-busy="true"
+              class="demo-box stack"
+              onsubmit="return false"
+            >
+              <h4>Busy form</h4>
+              <div>
+                <label for="busy-input">Username</label
+                ><input id="busy-input" value="johndoe" readonly />
+              </div>
+              <div>
+                <label for="busy-select">Role</label
+                ><select id="busy-select" disabled>
+                  <option>Administrator</option>
+                </select>
+              </div>
+              <button type="submit" class="positive">Save changes</button>
+            </form>
+            <div
+              aria-busy="true"
+              class="demo-box stack"
+              style="--busy-size: 2.5rem; --busy-blur: 2px"
+            >
+              <h4>Busy box (custom dials)</h4>
+              <p>
+                Dials: <code>--busy-size: 2.5rem</code> and
+                <code>--busy-blur: 2px</code>. The translucent veil overlays the
+                content and blocks interaction.
+              </p>
+              <button class="outlined">Action</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="layout">
+        <div class="wrapper">
+          <hgroup>
+            <p>Layout and media</p>
+            <h2>A handful of classes.</h2>
+            <p>
+              <code>.wrapper</code>, <code>.wrapper.wide</code>,
+              <code>.stack</code>, <code>.cluster</code>,
+              <code>.auto-grid</code>, <code>.cover</code>,
+              <code>.overlay</code>.
+            </p>
+          </hgroup>
+
+          <h5>Dials: <code>--layout-gap</code>, <code>--layout-min</code></h5>
+          <div
+            class="auto-grid"
+            style="--layout-min: 10rem; --layout-gap: 0.5rem"
+          >
+            <div class="demo-box">1</div>
+            <div class="demo-box">2</div>
+            <div class="demo-box">3</div>
+            <div class="demo-box">4</div>
+          </div>
+          <div class="demo-box stack" style="--layout-gap: 0.25rem">
+            <span>.stack</span><span>vertical flow</span
+            ><span>children lose block margins</span>
+          </div>
+
+          <h5>
+            Overlay positions (<code>.cover</code> +
+            <code>.overlay-&lt;position&gt;</code>)
+          </h5>
+          <div
+            class="auto-grid"
+            id="positions"
+            style="--layout-min: 11rem"
+          ></div>
+
+          <h5>Custom scrim with <code>--overlay-color</code></h5>
+          <div class="auto-grid" style="--layout-min: 15rem">
+            <article
+              class="tile"
+              data-theme="dark"
+              style="
+                --overlay-color: linear-gradient(
+                  to top,
+                  color-mix(in oklch, var(--color-surface) 85%, transparent),
+                  transparent 70%
+                );
+              "
+            >
+              <svg
+                class="cover accent"
+                viewBox="0 0 400 300"
+                preserveAspectRatio="xMidYMid slice"
+                aria-hidden="true"
+              >
+                <rect
+                  width="400"
+                  height="300"
+                  fill="currentColor"
+                  opacity=".4"
+                />
+                <circle cx="300" cy="90" r="50" fill="currentColor" />
+              </svg>
+              <div class="overlay overlay-bottom-left">
+                <h3>Gradient scrim</h3>
+                <p>Text color comes from the nested theme.</p>
+              </div>
+            </article>
+          </div>
+
+          <h5>Nested themes</h5>
+          <div class="auto-grid" style="--layout-min: min(100%, 14rem)">
+            <div class="tile" data-theme="light">
+              <h4>light</h4>
+              <button>Action</button>
+            </div>
+            <div class="tile" data-theme="dark">
+              <h4>dark</h4>
+              <button>Action</button>
+            </div>
+            <div class="tile" data-theme="accent">
+              <h4>accent</h4>
+              <button>Action</button>
+            </div>
+          </div>
+
+          <aside>
+            <h5>Aside</h5>
+            <p>
+              A side note gets a faint tint, a discreet border and smaller text.
+            </p>
+            <nav aria-label="Related">
+              <ul>
+                <li><a href="#typography">Typography</a></li>
+                <li><a href="#forms" aria-current="page">Forms</a></li>
+              </ul>
+            </nav>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="cookie" open role="region" aria-label="Cookie Preferences">
+      <form method="dialog">
+        <p>
+          We use essential cookies to make our site work.
+          <a href="/privacy">Privacy Policy</a>.
+        </p>
+        <footer>
+          <button type="submit" value="reject" class="outlined">
+            Essential only
+          </button>
+          <button type="submit" value="accept">Accept all</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <footer>
+      <p>Blush CSS demo</p>
+      <p>Built on Tailwind CSS v4</p>
+      <p>
+        &copy; 2026 <a href="mailto:maurizio@forwalk.org">Maurizio Melani</a>.
+        Released under the
+        <a href="https://github.com/forwalk-org/blush-css/blob/main/LICENSE"
+          >MIT License</a
+        >.
+      </p>
+    </footer>
+
+    <script>
+      // On github.io the repository link is derived from the address: no URL to edit.
+      const m = location.hostname.match(/^([^.]+)\.github\.io$/),
+        repo = location.pathname.split('/')[1]
+      if (m && repo)
+        document
+          .querySelectorAll('a[data-repo]')
+          .forEach((a) => (a.href = `https://github.com/${m[1]}/${repo}`))
+
+      const ex = document.getElementById('expand')
+      ex.addEventListener('click', () =>
+        ex.setAttribute(
+          'aria-expanded',
+          ex.getAttribute('aria-expanded') !== 'true'
+        )
+      )
+      document.getElementById('ind').indeterminate = true
+
+      // Overlay positions: one tile per modifier, built here to keep the markup short
+      const pos = document.getElementById('positions')
+      ;[
+        'top-left',
+        'top',
+        'top-right',
+        'center-left',
+        'center',
+        'center-right',
+        'bottom-left',
+        'bottom',
+        'bottom-right',
+        'full'
+      ].forEach((p) => {
+        const a = document.createElement('article')
+        a.className = 'tile'
+        a.innerHTML = `<svg class="cover accent" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="300" fill="currentColor" opacity=".3"/><path d="M0 300 L120 120 L210 230 L290 90 L400 300Z" fill="currentColor" opacity=".6"/></svg><div class="overlay overlay-${p}"><strong>${p === 'full' ? 'top' : '.overlay-' + p}</strong>${p === 'full' ? '<small>.overlay-full: bottom</small>' : ''}</div>`
+        pos.appendChild(a)
+      })
+
+      const busyToggle = document.getElementById('toggle-busy-all')
+      busyToggle.addEventListener('change', (e) => {
+        document
+          .querySelectorAll(
+            '#busy button:not(#toggle-busy-all), #busy a[role="button"], #busy form, #busy .demo-box'
+          )
+          .forEach((el) =>
+            el.setAttribute('aria-busy', e.target.checked ? 'true' : 'false')
+          )
+      })
+    </script>
+  </body>
+</html>

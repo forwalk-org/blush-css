@@ -1,0 +1,291 @@
+/**
+ * SEMANTIC / typography
+ *
+ * Fluid type scale and vertical rhythm for text elements: headings, hgroup,
+ * paragraphs, links, lists, inline text (ins, del), code, kbd, pre and tables.
+ *
+ * Quotes, mark and abbr live in data.css; figure and figcaption in media.css.
+ *
+ * Rhythm comes from two tokens defined on `:root` in theme/derived.css:
+ *   --typography-spacing-vertical   space after a block (default 1.5em)
+ *   --typography-spacing-top        space before a heading or quote
+ *                                   (default clamp(2.5rem, 1.5rem + 3vw, 4.5rem))
+ *
+ * Spacing is proportional to the element: block gaps are in em, so they
+ * follow each element's own size, and the space before a section grows
+ * with the viewport.
+ *
+ * Headings sit close to the text they introduce (0.5em below) and far from
+ * the block before them (half of --typography-spacing-top, or all of it after
+ * a text block), so proximity alone shows which section a heading opens.
+ *
+ * Scale: each heading grows between a floor sized for a 360px phone and a
+ * ceiling for wide screens. Leading is proportional to size: h1 (and the
+ * hero title) stay tight at 0.9 so a wrapped display title reads as one
+ * block, then each step down opens by 0.1 (h2 1.0 ... h6 1.4) toward the
+ * 1.625 of body text. Tracking tightens only on h1-h3. h6 is body-sized and told apart
+ * by uppercase and letter spacing rather than by size.
+ *
+ * Each heading exposes its leading as `--leading`. With tight leading,
+ * accented capitals (È, À) rise above the line box, so in an hgroup the
+ * title reserves (1.1 - leading) / 2 em of its own: just the room the
+ * accent needs, following the heading's fluid size, zero from h3 down,
+ * where the leading is open enough. The eyebrow sets its own tight leading
+ * and no margin, so the group stays as compact as the accents allow.
+ *
+ * hgroup convention:
+ *   first <p>        eyebrow (accent color, small, uppercase)
+ *   <h1>-<h6>        the title
+ *   last <p>         subtitle (muted, fluid size)
+ *
+ * Reads:  --font-heading, --font-text, --font-mono, --color-text/heading/muted/
+ *         accent/accent-soft/border/surface/surface-soft/valid/invalid
+ * Layer:  components
+ */
+@layer components {
+
+    /* -------------------------------------------------------------
+       1. Block spacing
+       ------------------------------------------------------------- */
+    address,
+    blockquote,
+    dl,
+    ol,
+    p,
+    pre,
+    table,
+    ul,
+    figure {
+        margin-block-start: 0;
+        margin-block-end: var(--typography-spacing-vertical);
+        color: var(--color-text);
+    }
+
+    /* -------------------------------------------------------------
+       2. Headings
+       ------------------------------------------------------------- */
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-bold;
+        font-family: var(--font-heading, var(--font-text));
+        color: var(--color-heading);
+        margin-block-start: calc(var(--typography-spacing-top) * 0.5);
+        margin-block-end: 0.5em;
+        text-wrap: balance;
+    }
+
+    /* Fluid scale: floor for phones, ceiling for wide screens. */
+    h1 { font-size: clamp(2.25rem, 4.5vw + 1rem, 4rem); }
+    h2 { font-size: clamp(1.75rem, 3vw + 0.9rem, 3rem); }
+    h3 { font-size: clamp(1.45rem, 2vw + 0.75rem, 2.25rem); }
+    h4 { font-size: clamp(1.2rem, 1.2vw + 0.7rem, 1.6rem); }
+    h5 { font-size: clamp(1.075rem, 0.8vw + 0.65rem, 1.25rem); }
+    h6 { font-size: 1rem; }
+
+    /* Leading and tracking by size. */
+    h1 { --leading: .9; }
+    h2 { --leading: 1; }
+    h3 { --leading: 1.1; }
+    h4 { --leading: 1.2; }
+    h5 { --leading: 1.3; }
+    h6 { --leading: 1.4; }
+    :is(h1, h2, h3, h4, h5, h6) { line-height: var(--leading); }
+    :is(h1, h2, h3) { letter-spacing: -0.02em; }
+    h6 {
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    /* A heading that follows a block gets extra space above it. */
+    :where(article, address, blockquote, dl, figure, form, ol, p, pre, table, ul) + :is(h1, h2, h3, h4, h5, h6) {
+        margin-block-start: var(--typography-spacing-top);
+    }
+
+    /* -------------------------------------------------------------
+       3. Paragraphs
+       ------------------------------------------------------------- */
+    p {
+        margin-block-end: var(--typography-spacing-vertical);
+        text-wrap: pretty;
+    }
+
+    /* -------------------------------------------------------------
+       4. Heading groups
+       ------------------------------------------------------------- */
+    hgroup {
+        margin-block-end: var(--typography-spacing-vertical);
+
+        > * {
+            margin-block: 0;
+        }
+
+        /* Eyebrow: never below 0.75rem, so it stays legible on phones. */
+        > p:first-child {
+            color: var(--color-accent);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: .12em;
+            font-size: max(0.8em, 0.75rem);
+            @apply leading-none;  /* uppercase, no descenders: the line box is the letters */
+        }
+
+        /* Room for accented capitals, sized by the title's own leading. */
+        > p:first-child + :is(h1, h2, h3, h4, h5, h6) {
+            margin-block-start: max(0em, calc((1.1 - var(--leading)) * 0.5em));
+        }
+    }
+
+    /* Subtitle: the last paragraph of an hgroup, or the paragraph that follows it in a header. */
+    header > hgroup + p,
+    hgroup > p:not(:first-child):last-child {
+        color: var(--color-muted);
+        font-size: clamp(1.0625rem, 0.9rem + 0.6vw, 1.25rem);
+        @apply leading-normal;  /* reads with the title above, not as body copy */
+        font-weight: 400;
+        margin-block-start: 0.25em;
+    }
+
+    /* -------------------------------------------------------------
+       5. Links
+       ------------------------------------------------------------- */
+    :where(a:not([role="button"])),
+    [role="link"] {
+        color: var(--color-accent);
+        text-decoration: underline;
+        text-decoration-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
+        text-underline-offset: 0.25em;
+        transition: color 150ms ease, text-decoration-color 150ms ease;
+
+        &:is(:hover, :focus-visible) {
+            color: color-mix(in oklab, var(--color-accent) 85%, black);
+            text-decoration-color: currentColor;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 4px;
+            border-radius: 2px;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       6. Lists
+       ------------------------------------------------------------- */
+    :where(ol, ul) {
+        padding-inline-start: 1.5em;
+
+        li {
+            margin-block-end: calc(var(--typography-spacing-vertical) * 0.3);
+
+            &::marker {
+                color: var(--color-accent);
+            }
+        }
+    }
+
+    ul li { list-style-type: disc; }
+    ol li {
+        list-style-type: decimal;
+        font-variant-numeric: tabular-nums;
+    }
+
+    :where(dl, ol, ul) :where(dl, ol, ul) {
+        margin-block-start: calc(var(--typography-spacing-vertical) * 0.3);
+        margin-block-end: 0;
+    }
+
+    dl {
+        dt {
+            font-weight: 600;
+            color: var(--color-text);
+            margin-block-start: 0.75em;
+        }
+        dd {
+            margin-inline-start: 1.25em;
+            color: var(--color-muted);
+        }
+    }
+
+    /* -------------------------------------------------------------
+       7. Inline elements
+       ------------------------------------------------------------- */
+    ins {
+        color: var(--color-valid);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+
+    del {
+        color: var(--color-invalid);
+        text-decoration: line-through;
+    }
+
+    /* -------------------------------------------------------------
+       8. Code and monospace
+       ------------------------------------------------------------- */
+    code, kbd, samp {
+        font-family: var(--font-mono);
+        font-size: 0.875em;
+    }
+
+    code {
+        @apply rounded px-1.5 py-0.5;
+        background: var(--color-accent-soft);
+        color: var(--color-text);
+    }
+
+    kbd {
+        @apply rounded px-1.5 py-0.5 border text-xs shadow-xs;
+        background-color: var(--color-surface-soft);
+        border-color: var(--color-border);
+        color: var(--color-text);
+    }
+
+    pre {
+        @apply my-6 overflow-x-auto rounded-xl p-5;
+        font-family: var(--font-mono);
+        background: color-mix(in oklab, var(--color-text) 95%, black);
+        color: var(--color-surface);
+
+        code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+    }
+
+    /* -------------------------------------------------------------
+       9. Tables
+       ------------------------------------------------------------- */
+    :where(table) {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: start;
+        font-variant-numeric: tabular-nums;
+        margin-block-end: var(--typography-spacing-vertical);
+    }
+
+    th, td {
+        padding-block: 0.75rem;
+        padding-inline: 1rem;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-text);
+    }
+
+    th {
+        font-weight: 600;
+        text-align: start;
+        background-color: color-mix(in oklab, var(--color-accent) 5%, var(--color-surface));
+    }
+
+    tfoot {
+        th, td {
+            border-top: 2px solid var(--color-border);
+            border-bottom: none;
+            font-weight: 600;
+        }
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: color-mix(in oklab, var(--color-text) 2%, transparent);
+    }
+}

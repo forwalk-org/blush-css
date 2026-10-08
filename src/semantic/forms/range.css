@@ -1,0 +1,126 @@
+/**
+ * SEMANTIC / forms / range
+ *
+ * `input[type=range]`: track and thumb share the same height (1.25rem), with
+ * hover, drag, focus and disabled states for both WebKit and Gecko.
+ *
+ * Semantic states (no class involved)
+ * -----------------------------------
+ *   :hover | :active      track tint, thumb grows (more while dragging)
+ *   :focus-visible        ring around the track
+ *   disabled              dimmed, muted thumb
+ *
+ * Reads:  --color-accent/muted/surface, --color-field-border(-hover) and the
+ *         derived tokens --color-range-track(-hover/-active) and
+ *         --color-range-glow (see derived.css, overridable by any theme)
+ * Layer:  components
+ */
+@layer components {
+    input[type="range"] {
+        @apply w-full h-5 appearance-none bg-transparent cursor-pointer select-none m-0 focus:outline-none;
+
+        /* -------------------------------------------------------------
+           1. Track (WebKit and Gecko)
+           ------------------------------------------------------------- */
+        &::-webkit-slider-runnable-track {
+            @apply w-full h-5 rounded-full transition-colors duration-150;
+            background-color: var(--color-range-track);
+            border: 1px solid var(--color-field-border);
+        }
+
+        &::-moz-range-track {
+            @apply w-full h-5 rounded-full transition-colors duration-150;
+            background-color: var(--color-range-track);
+            border: 1px solid var(--color-field-border);
+        }
+
+        /* -------------------------------------------------------------
+           2. Thumb (WebKit and Gecko)
+           ------------------------------------------------------------- */
+        /* Same height as the track, so no vertical offset is needed. */
+        &::-webkit-slider-thumb {
+            @apply appearance-none w-5 h-5 rounded-full border border-[color:var(--color-accent)]
+                transition-all duration-150 ease-out shadow-xs;
+            margin-top: -1px;
+            background-color: var(--color-accent);
+        }
+
+        &::-moz-range-thumb {
+            @apply w-5 h-5 rounded-full border border-[color:var(--color-accent)]
+                transition-all duration-150 ease-out shadow-xs box-border;
+            background-color: var(--color-accent);
+        }
+
+        /* -------------------------------------------------------------
+           3. Hover: the thumb grows slightly and gains a glow
+           ------------------------------------------------------------- */
+        &:hover:not(:disabled) {
+            &::-webkit-slider-runnable-track {
+                background-color: var(--color-range-track-hover);
+                border-color: var(--color-field-border-hover);
+            }
+            &::-moz-range-track {
+                background-color: var(--color-range-track-hover);
+                border-color: var(--color-field-border-hover);
+            }
+            &::-webkit-slider-thumb {
+                @apply scale-110 brightness-105;
+                box-shadow: 0 2px 6px var(--color-range-glow);
+            }
+            &::-moz-range-thumb {
+                @apply scale-110 brightness-105;
+                box-shadow: 0 2px 6px var(--color-range-glow);
+            }
+        }
+
+        /* -------------------------------------------------------------
+           4. Active: while dragging the thumb grows further
+           ------------------------------------------------------------- */
+        &:active:not(:disabled) {
+            &::-webkit-slider-runnable-track {
+                background-color: var(--color-range-track-active);
+            }
+            &::-moz-range-track {
+                background-color: var(--color-range-track-active);
+            }
+            &::-webkit-slider-thumb {
+                @apply scale-125 brightness-95;
+            }
+            &::-moz-range-thumb {
+                @apply scale-125 brightness-95;
+            }
+        }
+
+        /* -------------------------------------------------------------
+           5. Keyboard focus: ring around the track
+           ------------------------------------------------------------- */
+        &:focus-visible {
+            &::-webkit-slider-runnable-track {
+                @apply ring-3 ring-offset-2;
+                --tw-ring-color: var(--color-range-glow);
+                --tw-ring-offset-color: var(--color-surface);
+            }
+            &::-moz-range-track {
+                @apply ring-3 ring-offset-2;
+                --tw-ring-color: var(--color-range-glow);
+                --tw-ring-offset-color: var(--color-surface);
+            }
+        }
+
+        /* -------------------------------------------------------------
+           6. Disabled
+           ------------------------------------------------------------- */
+        &:disabled {
+            @apply opacity-50 cursor-not-allowed;
+
+            &::-webkit-slider-thumb {
+                @apply border-[color:var(--color-muted)];
+                background-color: var(--color-muted);
+            }
+            &::-moz-range-thumb {
+                @apply border-[color:var(--color-muted)];
+                background-color: var(--color-muted);
+            }
+        }
+    }
+}

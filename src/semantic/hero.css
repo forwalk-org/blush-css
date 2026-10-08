@@ -1,0 +1,148 @@
+/**
+ * SEMANTIC / hero
+ *
+ * `<header role="banner">` as a full-bleed hero. The role is what makes it a
+ * hero, so no class is needed. An optional `<img>` or `<picture>` placed
+ * directly inside the header fills it, behind the content; a gradient scrim
+ * (`--hero-overlay`) is painted over it.
+ *
+ * Variable contract
+ * -----------------
+ *   --hero-overlay     scrim gradient over the image (default set in theme/derived.css)
+ *   --hero-min-height  minimum height (default min(820px, 92vh))
+ *
+ * Titles use `--font-hero`, falling back to `--font-heading`. Direct children
+ * with a role in the layout: `> p` description, `nav` actions, `ul` key points.
+ *
+ * Top bar
+ * -------
+ * When the first element of the header (ignoring the background `<img>` or
+ * `<picture>`) is a `<nav>`, it becomes a top bar instead of the actions row:
+ * it is attached to the top edge of the hero (no top padding), its children are
+ * spread on one row (brand on the start side, links on the end side), and the
+ * rest of the content is centered in the height left below it: the free space
+ * is split evenly between the bar and the first content, and after the last
+ * content.
+ *
+ * Both layouts work, with the content directly in the header or inside a
+ * `.wrapper` (and the top bar itself can be `<nav class="wrapper wide">`).
+ *
+ * Usage
+ *   <header role="banner">
+ *     <img src="..." alt="">
+ *     <hgroup><p>Eyebrow</p><h1>Title</h1></hgroup>
+ *     <p>Description</p>
+ *     <nav>...actions...</nav>
+ *     <ul>...key points...</ul>
+ *   </header>
+ *
+ * Usage with a top bar (content directly in the header)
+ *   <header role="banner">
+ *     <nav aria-label="Main">
+ *       <a href="/">Brand</a>
+ *       <ul><li><a href="#a">Link</a></li></ul>
+ *     </nav>
+ *     <img src="..." alt="">
+ *     <hgroup><p>Eyebrow</p><h1>Title</h1></hgroup>
+ *     <p>Description</p>
+ *     <nav aria-label="Hero actions">...actions...</nav>
+ *     <ul>...key points...</ul>
+ *   </header>
+ *
+ * Usage with a top bar (content inside a wrapper)
+ *   <header role="banner">
+ *     <nav aria-label="Main" class="wrapper wide">...brand and links...</nav>
+ *     <img src="..." alt="">
+ *     <div class="wrapper">
+ *       <hgroup><p>Eyebrow</p><h1>Title</h1></hgroup>
+ *       <p>Description</p>
+ *       <nav aria-label="Hero actions">...actions...</nav>
+ *       <ul>...key points...</ul>
+ *     </div>
+ *   </header>
+ *
+ * Reads:  --hero-overlay, --hero-min-height, --font-hero, --font-heading
+ * Layer:  components
+ */
+@layer components {
+  /* -------------------------------------------------------------
+       1. Container and text
+       ------------------------------------------------------------- */
+  header[role='banner'] {
+    @apply relative isolate grid overflow-hidden content-end;
+    @apply min-h-[var(--hero-min-height,min(820px,92vh))];
+    @apply px-[clamp(1.5rem,5vw,4rem)] py-[clamp(2rem,6vw,5rem)];
+
+    /* Titles use the hero font (falling back to heading font). */
+    & :is(h1, h2, h3, h4, h5, h6) {
+      font-family: var(--font-hero, var(--font-heading));
+    }
+
+    & h1 {
+      /* Floor sized for a 360px phone: a long title still fits in three lines. */
+      @apply mb-[1.7rem] text-[clamp(2.5rem,5vw+1.25rem,5rem)];
+    }
+
+    /* Description: direct child paragraph, or direct child of a `.wrapper`. */
+    & > p,
+    & > .wrapper > p {
+      @apply max-w-[680px] text-[clamp(1.1rem,2vw,1.45rem)] leading-normal;
+    }
+
+    /* Actions row (buttons or links with role="button"). */
+    & nav {
+      @apply mt-8 flex flex-wrap gap-3;
+    }
+
+    /* Key points list below actions. */
+    & ul {
+      @apply mt-10 ml-[1.5em] flex flex-wrap list-none gap-6 p-0 text-[0.9rem];
+    }
+
+    /* Top bar: the first element (ignoring the background image) is a nav.
+       The header becomes a column with no top padding, so the bar touches the
+       top edge. Two auto margins, one under the bar and one under the last
+       content, share the free height equally: the space is split between the
+       bar and the first content, and after the last content. They are
+       `!important` so that a `.wrapper` margin (utilities layer) on the bar or
+       on the content cannot cancel them. */
+    &:has(> nav:nth-child(1 of :not(img, picture))) {
+      @apply flex flex-col pt-0;
+
+      & > :nth-last-child(1 of :not(img, picture)) {
+        @apply mb-auto!;
+      }
+    }
+
+    & > nav:nth-child(1 of :not(img, picture)) {
+      /* Not an actions row: no top margin. The top padding gives the bar some
+         air; the bottom padding is the minimum gap before the content, kept
+         when the header is too short to leave free height. */
+      @apply mt-0 mb-auto! items-center justify-between gap-x-6 gap-y-3 pt-4;
+      @apply pb-[clamp(1.5rem,4vw,3rem)];
+
+      /* Its list is a row of links, not a key points list. */
+      & ul {
+        @apply m-0 gap-x-6 gap-y-2 text-base;
+      }
+    }
+  }
+
+  /* Layer -1: Neutral scrim overlay. */
+  header[role='banner']::after {
+    @apply absolute inset-0 -z-10 pointer-events-none content-[''];
+    background: var(--hero-overlay);
+  }
+
+  /* Layer -2: HTML image or picture background container. */
+  header[role='banner'] > img,
+  header[role='banner'] > picture {
+    @apply absolute inset-0 -z-20 h-full w-full m-0 pointer-events-none;
+  }
+
+  /* Background image fitting and alignment. */
+  header[role='banner'] > img,
+  header[role='banner'] > picture > img {
+    @apply h-full w-full object-cover object-center;
+  }
+}

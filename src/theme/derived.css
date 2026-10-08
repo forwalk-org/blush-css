@@ -1,0 +1,141 @@
+/**
+ * THEME / derived
+ *
+ * Default formulas for the derived colors (base, forms, choices, range), the
+ * font stacks, the hero scrim (`--hero-overlay`) and the typographic rhythm
+ * tokens used by semantic/typography.css.
+ *
+ * Why they are declared on `[data-theme]` and not only on `:root`:
+ * a custom property that contains `var()` is resolved on the element that
+ * declares it and inherited already resolved. With nested themes
+ * (`<section data-theme="primary">` inside `<html data-theme="light">`) the
+ * derived values must therefore be recomputed on every element that carries
+ * a `data-theme`.
+ *
+ * How a theme overrides them: declare the variable in themes.css (or in your
+ * own CSS) after this file, with the same specificity. Variables a theme does
+ * not declare keep the formula below, evaluated with the theme's own colors.
+ *
+ * Reads:  --color-accent/surface/text/contrast/valid/invalid, --font-sans
+ * Layer: theme
+ */
+@layer theme {
+  :root,
+  [data-theme] {
+    --color-muted: color-mix(
+      in oklab,
+      var(--color-text) 60%,
+      var(--color-surface)
+    );
+    --color-border: color-mix(
+      in oklab,
+      var(--color-accent) 70%,
+      var(--color-surface)
+    );
+    --color-surface-soft: color-mix(
+      in oklab,
+      var(--color-surface) 92%,
+      var(--color-text)
+    );
+    --color-accent-soft: color-mix(
+      in oklab,
+      var(--color-accent) 30%,
+      var(--color-surface)
+    );
+    /* oklab, not oklch: with white or black text (hue 0, chroma 0) hue
+           interpolation would drift towards purple. */
+    --color-heading: color-mix(
+      in oklab,
+      var(--color-accent) 25%,
+      var(--color-text)
+    );
+
+    /* --- Forms: text fields, select, textarea --- */
+    --color-field: color-mix(
+      in oklab,
+      var(--color-accent) 4%,
+      var(--color-surface)
+    );
+    --color-field-hover: color-mix(
+      in oklab,
+      var(--color-accent) 7%,
+      var(--color-surface)
+    );
+    --color-field-border: color-mix(
+      in oklab,
+      var(--color-accent) 25%,
+      var(--color-border)
+    );
+    --color-field-border-hover: color-mix(
+      in oklab,
+      var(--color-accent) 45%,
+      var(--color-border)
+    );
+    --color-focus-ring: color-mix(
+      in oklab,
+      var(--color-accent) 20%,
+      transparent
+    );
+    --color-valid-ring: color-mix(
+      in oklab,
+      var(--color-valid) 20%,
+      transparent
+    );
+    --color-invalid-ring: color-mix(
+      in oklab,
+      var(--color-invalid) 20%,
+      transparent
+    );
+
+    /* --- Forms: checkbox, radio, switch --- */
+    --color-choice-border-hover: color-mix(
+      in oklab,
+      var(--color-text) 40%,
+      var(--color-surface)
+    );
+    /* The mark sits on top of the accent, like button text. */
+    --color-choice-check: var(--color-contrast);
+
+    /* --- Forms: range (glow = thumb shadow on hover + focus ring) --- */
+    --color-range-track: color-mix(
+      in oklab,
+      var(--color-accent) 15%,
+      var(--color-surface-soft)
+    );
+    --color-range-track-hover: color-mix(
+      in oklab,
+      var(--color-accent) 25%,
+      var(--color-surface-soft)
+    );
+    --color-range-track-active: color-mix(
+      in oklab,
+      var(--color-accent) 30%,
+      var(--color-surface-soft)
+    );
+    --color-range-glow: color-mix(
+      in oklab,
+      var(--color-accent) 35%,
+      transparent
+    );
+
+    /* The system sans: no web font to download, and text renders in the
+           face each platform is tuned for. */
+    --font-text: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    --font-heading: var(--font-text);
+    --font-hero: var(--font-heading);
+    --hero-overlay: linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--color-surface) 80%, transparent) 30%,
+      color-mix(in oklab, var(--color-surface) 20%, transparent) 100%
+    );
+  }
+
+  /* Typography rhythm: set once on :root (see semantic/typography.css).
+       The space before a heading is in rem, not em: an em value would grow
+       with the heading itself and open very large gaps above h1 and h2 on
+       wide screens. */
+  :root {
+    --typography-spacing-vertical: 1.5em;
+    --typography-spacing-top: clamp(2.5rem, 1.5rem + 3vw, 4.5rem);
+  }
+}

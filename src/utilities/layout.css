@@ -1,0 +1,110 @@
+/**
+ * UTILITIES / layout
+ *
+ * A deliberately small set of layout primitives. Each one does a single job
+ * and reads its dials from custom properties, so there is nothing to memorise
+ * beyond the class name.
+ *
+ *   .wrapper      centered column with fluid side gutters
+ *   .wrapper.wide centered column with a 20% wider maximum layout width (78rem default)
+ *   .stack        vertical flow with even spacing
+ *   .cluster      wrapping row, for buttons, tags and meta
+ *   .auto-grid    responsive grid: as many columns as fit
+ *
+ * Dials (all optional)
+ *   --layout-width   max width of .wrapper                (default 65rem)
+ *   --layout-gutter  side gutter of .wrapper              (default 6 x --spacing = 1.5rem)
+ *   --layout-gap     gap of .stack / .cluster / .auto-grid
+ *                    (defaults 5 / 3 / 6 x --spacing = 1.25 / 0.75 / 1.5rem)
+ *   --layout-min     minimum column width of .auto-grid  (default --container-3xs = 16rem)
+ *
+ * The defaults come from Tailwind's own scale, so they follow a project that
+ * customises `--spacing` or `--container-*`.
+ *
+ * Usage
+ *   <main class="wrapper stack">
+ *     <section class="wrapper wide auto-grid" style="--layout-min: 14rem">...</section>
+ *     <nav class="cluster"><button>One</button><button>Two</button></nav>
+ *   </main>
+ *
+ * Why these names: `container` and `grid` are Tailwind utilities. Distinct
+ * names let both coexist in a project that also scans its sources.
+ *
+ * Reads:  --spacing, --container-3xs
+ * Layer:  utilities
+ */
+@layer utilities {
+  /* -------------------------------------------------------------
+       1. Wrapper (Standard & Wide)
+       ------------------------------------------------------------- */
+
+  /**
+     * Centered layout container with responsive inline gutters.
+     * Evaluates custom layout width or defaults to 65rem.
+     */
+  .wrapper {
+    @apply mx-auto;
+    width: min(
+      100% - 2 * var(--layout-gutter, calc(var(--spacing) * 6)),
+      var(--layout-width, 65rem)
+    );
+
+    /**
+         * Wide wrapper variant: increases maximum layout width by 20%
+         * (65rem * 1.2 = 78rem default).
+         */
+    &.wide {
+      width: min(
+        100% - 2 * var(--layout-gutter, calc(var(--spacing) * 6)),
+        var(--layout-width, calc(65rem * 1.2))
+      );
+    }
+  }
+
+  /* -------------------------------------------------------------
+       2. Stack
+       ------------------------------------------------------------- */
+
+  /**
+     * Vertical flex column with uniform spacing between children.
+     * Resets block margins on direct descendants to prevent gap conflicts.
+     */
+  .stack {
+    @apply flex flex-col;
+    gap: var(--layout-gap, calc(var(--spacing) * 5));
+
+    > * {
+      @apply my-0;
+    }
+  }
+
+  /* -------------------------------------------------------------
+       3. Cluster
+       ------------------------------------------------------------- */
+
+  /**
+     * Horizontal flex layout that wraps items automatically with centered alignment.
+     * Ideal for tag lists, button groups, and metadata rows.
+     */
+  .cluster {
+    @apply flex flex-wrap items-center;
+    gap: var(--layout-gap, calc(var(--spacing) * 3));
+  }
+
+  /* -------------------------------------------------------------
+       4. Auto Grid
+       ------------------------------------------------------------- */
+
+  /**
+     * Fluid CSS grid layout fitting as many columns as possible
+     * based on a specified minimum column threshold.
+     */
+  .auto-grid {
+    @apply grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, var(--layout-min, var(--container-3xs))), 1fr)
+    );
+    gap: var(--layout-gap, calc(var(--spacing) * 6));
+  }
+}
