@@ -51,9 +51,14 @@
     try { return JSON.parse(localStorage.getItem(KEY)) || {} } catch { return {} }
   }
   const state = Object.assign({ overrides: {} }, load())
-  const save = () => {
+  let saveTimer = 0
+  const flush = () => {
+    clearTimeout(saveTimer)
     try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* private mode */ }
   }
+  // Debounced: dragging a picker or typing would otherwise write on every event.
+  const save = () => { clearTimeout(saveTimer); saveTimer = setTimeout(flush, 200) }
+  window.addEventListener('pagehide', flush)
 
   /* ---------- theme + overrides on <html> (applied right away: no flash) */
   const initialTheme = root.getAttribute('data-theme')
@@ -108,6 +113,23 @@
     root.appendChild(probe)
     const css = getComputedStyle(probe).color
     probe.remove()
+    return toRgba(css)
+  }
+
+  /** Same as resolve() for many names: one style recalculation instead of one each. */
+  function resolveAll(names) {
+    const probes = names.map((n) => {
+      const p = probe.cloneNode()
+      p.style.color = `var(${n})`
+      return p
+    })
+    root.append(...probes)
+    const css = probes.map((p) => getComputedStyle(p).color)
+    probes.forEach((p) => p.remove())
+    return new Map(names.map((n, i) => [n, toRgba(css[i])]))
+  }
+
+  function toRgba(css) {
     px.clearRect(0, 0, 1, 1)
     px.fillStyle = '#000'
     px.fillStyle = css
@@ -223,18 +245,47 @@
       el('label', {}, name.slice(2), mark),
       el('div', { className: 'ctl' }, ...(picker ? [picker] : []), text, x))
 
+    // Events fire far faster than the page can restyle: keep only the latest
+    // value and apply it once per frame.
+    let frame = 0, pending = null, alpha = null
+    const schedule = (apply) => {
+      pending = apply
+      if (!frame) frame = requestAnimationFrame(() => {
+        frame = 0
+        const run = pending
+        pending = null
+        run && run()
+      })
+    }
+
     text.addEventListener('input', () => {
       const v = text.value.trim()
       if (!v) return
-      setVar(name, v)
-      if (picker) picker.value = resolve(name).hex
-      refresh(name)
+      schedule(() => {
+        setVar(name, v)
+        if (picker) picker.value = resolve(name).hex
+        refresh(name)
+      })
     })
-    if (picker) picker.addEventListener('input', () => {
-      setVar(name, hexToOklch(picker.value, resolve(name).alpha))
-      text.value = getComputedStyle(root).getPropertyValue(name).trim()
-      refresh(name)
-    })
+    if (picker) {
+      picker.addEventListener('input', () => {
+        alpha ??= resolve(name).alpha // read once per drag, not on every event
+        const v = hexToOklch(picker.value, alpha)
+        schedule(() => {
+          setVar(name, v)
+          text.value = v
+        })
+      })
+      // Released: update the derived rows once.
+      picker.addEventListener('change', () => {
+        alpha = null
+        cancelAnimationFrame(frame)
+        frame = 0
+        if (pending) pending() // never drop the last value
+        pending = null
+        refresh(name)
+      })
+    }
     x.addEventListener('click', () => { resetVar(name); refresh() })
     rows.set(name, { wrap, text, picker, mark })
     return wrap
@@ -243,13 +294,14 @@
   /** Syncs every control with the computed values; `skip` keeps the control being edited. */
   function refresh(skip) {
     const cs = getComputedStyle(root)
+    const colors = resolveAll([...rows].filter(([, r]) => r.picker).map(([n]) => n))
     for (const [name, r] of rows) {
       const ov = overridden(name)
       r.wrap.classList.toggle('ov', ov)
       r.mark.textContent = ov ? 'edited' : ''
       if (name === skip) continue
       r.text.value = cs.getPropertyValue(name).trim()
-      if (r.picker) r.picker.value = resolve(name).hex
+      if (r.picker) r.picker.value = colors.get(name).hex
     }
     if (sel && sel.value !== theme()) sel.value = theme()
   }
