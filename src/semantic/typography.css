@@ -34,7 +34,9 @@
  * and no margin, so the group stays as compact as the accents allow.
  *
  * hgroup convention:
- *   first <p>        eyebrow (accent color, small, uppercase)
+ *   first <p>        eyebrow (accent color, small, uppercase). Its size follows
+ *                    the title level: fluid bands for h1 and h2, 0.75-0.8rem
+ *                    from h3 down (the floor keeps it legible on phones)
  *   <h1>-<h6>        the title
  *   last <p>         subtitle (muted, fluid size)
  *
@@ -124,8 +126,17 @@
             text-transform: uppercase;
             font-weight: 600;
             letter-spacing: .12em;
-            font-size: max(0.8em, 0.75rem);
+            font-size: var(--eyebrow-size, max(0.8em, 0.75rem));
             @apply leading-none;  /* uppercase, no descenders: the line box is the letters */
+        }
+
+        /* The eyebrow comes before the title, so :has() reads the title level. */
+        &:has(> h1) > p:first-child {
+            --eyebrow-size: clamp(0.875rem, 0.4vw + 0.75rem, 1.0625rem);
+        }
+
+        &:has(> h2) > p:first-child {
+            --eyebrow-size: clamp(0.8125rem, 0.25vw + 0.75rem, 0.9375rem);
         }
 
         /* Room for accented capitals, sized by the title's own leading. */
