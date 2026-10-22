@@ -8,13 +8,25 @@
  * `--color-choice-check`. A data-URI cannot use `var()`, so the color lives
  * on the `::before` pseudo-element and the SVG only provides the shape.
  *
+ * Variable contract
+ * -----------------
+ * Checkbox, radio and switch share one color, set on the input itself:
+ *
+ *   --choice-tone   checked fill, radio ring, switch track, focus border.
+ *                   Defaults to `--tone`, then to `--color-choice`, then to the accent.
+ *   --choice-ring   keyboard focus ring: --choice-tone at 20%
+ *
+ * Recolor one input with a tone class (`class="positive"`), or a whole group by
+ * setting `--color-choice` on a form, fieldset or theme (it inherits, `--tone` does not).
+ *
  * Semantic states (no class involved)
  * -----------------------------------
- *   :checked | :indeterminate   accent fill and mark (switch: the knob slides)
+ *   :checked | :indeterminate   tone fill and mark (switch: the knob slides)
  *   disabled                    dimmed, not interactive
  *
- * Reads:  --color-accent/surface/border, --color-choice-border-hover,
- *         --color-choice-check, --color-focus-ring (see derived.css)
+ * Reads:  --tone, --color-choice/surface/border, --color-choice-border-hover,
+ *         --color-choice-check (see derived.css)
+ * See also: utilities/tone.css
  * Layer:  components
  */
 @layer components {
@@ -24,14 +36,17 @@
        ------------------------------------------------------------- */
     input[type="checkbox"],
     input[type="radio"] {
+        --choice-tone: var(--tone, var(--color-choice));
+        --choice-ring: color-mix(in oklab, var(--choice-tone) 20%, transparent);
+
         @apply relative inline-block shrink-0 align-middle appearance-none cursor-pointer
             w-[1.25em] h-[1.25em] m-0 p-0
             border border-[color:var(--color-border)] bg-[color:var(--color-surface)]
             bg-center bg-no-repeat bg-[size:0.75em_auto]
             transition-all duration-150
             hover:border-[color:var(--color-choice-border-hover)]
-            focus-visible:outline-none focus-visible:border-[color:var(--color-accent)]
-            focus-visible:ring-3 focus-visible:ring-[color:var(--color-focus-ring)]
+            focus-visible:outline-none focus-visible:border-[color:var(--choice-tone)]
+            focus-visible:ring-3 focus-visible:ring-[color:var(--choice-ring)]
             disabled:opacity-50 disabled:cursor-not-allowed;
     }
 
@@ -43,12 +58,12 @@
     }
 
     input[type="checkbox"]:not([role="switch"]):checked {
-        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)];
+        @apply bg-[color:var(--choice-tone)] border-[color:var(--choice-tone)];
         --choice-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3.75 9 6.5 11.75 12.25 4.75'/%3E%3C/svg%3E");
     }
 
     input[type="checkbox"]:not([role="switch"]):indeterminate {
-        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)];
+        @apply bg-[color:var(--choice-tone)] border-[color:var(--choice-tone)];
         --choice-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='4' y1='8' x2='12' y2='8'/%3E%3C/svg%3E");
     }
 
@@ -69,7 +84,7 @@
     }
 
     input[type="radio"]:checked {
-        @apply bg-[color:var(--color-surface)] border-[color:var(--color-accent)] border-[0.35em];
+        @apply bg-[color:var(--color-surface)] border-[color:var(--choice-tone)] border-[0.35em];
     }
 
     /* -------------------------------------------------------------
@@ -86,7 +101,7 @@
     }
 
     input[type="checkbox"][role="switch"]:checked {
-        @apply bg-[color:var(--color-accent)] border-[color:var(--color-accent)] bg-none;
+        @apply bg-[color:var(--choice-tone)] border-[color:var(--choice-tone)] bg-none;
     }
 
     /* Checked: the knob slides to the end of the track. */

@@ -20,7 +20,8 @@
  *     selector (inside @layer, @media, nested rules...) becomes a theme.
  *     Cross-origin stylesheets cannot be read and are skipped.
  *   - Reads the editable tokens from the same rules (--color-*, --font-*,
- *     --radius-*, --hero-*); the eight Blush public tokens go first.
+ *     --radius-*, --hero-*); the eight Blush public tokens go first, then the
+ *     checkbox / radio / switch group (--color-choice*).
  *   - Remembers the chosen theme and your edits (per theme) in localStorage.
  *   - Exports the current theme as CSS (copy or download).
  *
@@ -38,6 +39,7 @@
     '--color-accent', '--color-surface', '--color-text', '--color-contrast',
     '--color-invalid', '--color-valid', '--color-warning', '--radius-control',
   ]
+  const CHOICES = ['--color-choice', '--color-choice-check', '--color-choice-border-hover']
   const TOKEN = /^--(color|font|radius|hero)-/
   const THEME_SEL = /\[data-theme\s*=\s*["']?([\w-]+)["']?\s*\]/g
   const STACKS = [
@@ -331,7 +333,8 @@
     })
 
     const core = tokens.filter((t) => PUBLIC.includes(t))
-    const rest = tokens.filter((t) => !PUBLIC.includes(t))
+    const choices = tokens.filter((t) => CHOICES.includes(t))
+    const rest = tokens.filter((t) => !PUBLIC.includes(t) && !CHOICES.includes(t))
     const group = (title, list) => {
       const d = el('details', {}, el('summary', { textContent: `${title} (${list.length})` }), ...list.map(row))
       return d
@@ -342,6 +345,7 @@
       el('p', { className: 'note', textContent: `${themes.length} themes read from the stylesheets. Edits are kept per theme in this browser.` }),
       el('h3', { textContent: 'Core tokens' }), ...core.map(row),
     ]
+    if (choices.length) kids.push(el('h3', { textContent: 'Checkbox, radio, switch' }), ...choices.map(row))
     if (rest.length) {
       const colors = rest.filter(isColor), others = rest.filter((t) => !isColor(t))
       kids.push(el('h3', { textContent: 'Derived and other' }))

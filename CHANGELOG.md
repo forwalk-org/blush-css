@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- `--color-choice`: one shared token for the checked color of checkbox, radio and
+  switch (default: the accent). Tone classes also recolor a single input via
+  `--choice-tone`, and the focus ring follows it. The theme editor lists it in a
+  "Checkbox, radio, switch" group. (`src/semantic/forms/choices.css`,
+  `src/theme/derived.css`, `demo/blush-theme-editor.js`)
+
 ### Changed
 
 - `hgroup` eyebrow now scales with the title level instead of staying at a fixed

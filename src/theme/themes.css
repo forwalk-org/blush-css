@@ -7,7 +7,7 @@
  * and may also set any DERIVED token (optional):
  *   muted, border, surface-soft, accent-soft, heading
  *   field, field-hover, field-border, field-border-hover, focus-ring,
- *   valid-ring, invalid-ring, choice-border-hover, choice-check,
+ *   valid-ring, invalid-ring, choice, choice-border-hover, choice-check,
  *   range-track, range-track-hover, range-track-active, range-glow
  * Derived tokens a theme leaves out use the formulas in derived.css. The
  * built-in dark, primary and secondary themes set `--color-heading`; light

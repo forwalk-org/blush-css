@@ -221,7 +221,7 @@ and may override any **derived token** (optional). Derived tokens a theme leaves
 
 - base: `--color-muted`, `--color-border`, `--color-surface-soft`, `--color-accent-soft`, `--color-heading`
 - forms: `--color-field`, `--color-field-hover`, `--color-field-border`, `--color-field-border-hover`, `--color-focus-ring`, `--color-valid-ring`, `--color-invalid-ring`
-- choices and range: `--color-choice-border-hover`, `--color-choice-check`, `--color-range-track` (`-hover`, `-active`), `--color-range-glow`
+- choices and range: `--color-choice` (checked fill, defaults to the accent), `--color-choice-border-hover`, `--color-choice-check`, `--color-range-track` (`-hover`, `-active`), `--color-range-glow`
 
 Fonts are optional too: `--font-text` (page text, buttons and fields; default the system sans, `--font-sans`), `--font-heading` (h1-h6, follows `--font-text`) and `--font-hero` (headings inside `<header role="banner">`, follows `--font-heading`). Blush ships no web font: to use one, load it in your page and set the variable in a theme. The hero scrim is `--hero-overlay`.
 
@@ -256,7 +256,7 @@ Every interactive element has a `:focus-visible` style, disabled is covered in i
 | `.accent`   | filled button in the current tone | promote a neutral button, undo `.muted` |
 | `.muted`    | neutral button surface            | secondary actions                       |
 
-On buttons a tone is the fill. On every other element the same classes color the text: `<p class="positive">`, `<span class="accent">`, `<small class="muted">` (`.muted` uses `--color-muted`). Buttons keep their own text color (`--btn-fg`) so a tinted button stays readable. `color` inherits, so a class on a container colors its text; the tone variable `--tone` itself never leaks to children.
+On buttons a tone is the fill. On every other element the same classes color the text: `<p class="positive">`, `<span class="accent">`, `<small class="muted">` (`.muted` uses `--color-muted`). Buttons keep their own text color (`--btn-fg`) so a tinted button stays readable. `color` inherits, so a class on a container colors its text; the tone variable `--tone` itself never leaks to children. On a checkbox, radio or switch a tone class sets the checked color (`<input type="checkbox" class="positive">`); to recolor a whole group set `--color-choice` on a form, fieldset or theme.
 
 Inside a `<form>`, every button except the submit one is a secondary action and starts neutral; `.accent` turns it back into a filled button.
 

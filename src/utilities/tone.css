@@ -11,7 +11,7 @@
  *   .muted      neutral surface, for secondary actions
  *   .accent     filled in the current tone: the opposite of .muted
  *
- * The tone lives in `--tone`. buttons.css reads it today; any module can read
+ * The tone lives in `--tone`. buttons.css and forms/choices.css read it; any module can read
  * it tomorrow (`var(--tone, var(--color-accent))`).
  *
  *   <button class="positive">Confirm</button>

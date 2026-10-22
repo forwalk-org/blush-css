@@ -88,6 +88,9 @@
     );
 
     /* --- Forms: checkbox, radio, switch --- */
+    /* Fill of a checked choice. Set it on a form, fieldset or theme to recolor
+       every choice inside. */
+    --color-choice: var(--color-accent);
     --color-choice-border-hover: color-mix(
       in oklab,
       var(--color-text) 40%,
