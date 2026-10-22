@@ -4,6 +4,10 @@
 
 ### Added
 
+- Theme editor: optional `window.BlushThemeEditorConfig` (`tokens`, `groups`,
+  `groupsTitle`) lets a project list its own tokens and groups. They get the
+  same formula / theme / edited marker as the derived tokens.
+  (`demo/blush-theme-editor.js`)
 - `--color-choice`: one shared token for the checked color of checkbox, radio and
   switch (default: the accent). Tone classes also recolor a single input via
   `--choice-tone`, and the focus ring follows it. The theme editor lists it in a

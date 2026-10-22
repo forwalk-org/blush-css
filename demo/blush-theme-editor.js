@@ -28,6 +28,13 @@
  *   - Exports the current theme as CSS (copy or download): public tokens,
  *     whatever the theme sets itself, and your edits.
  *
+ * Project configuration (optional): define `window.BlushThemeEditorConfig`
+ * before this script to list the project's own tokens and groups.
+ *   tokens:      extra token prefixes to read, e.g. ['--tag-']
+ *   groups:      [[title, [tokens], open?]], same format as the derived groups
+ *   groupsTitle: heading of that section (default 'Project')
+ * Project tokens get the same formula / theme / edited marker as derived ones.
+ *
  * Page API: window.BlushThemeEditor { themes(), set(name), open(), close() }
  * Event:    'blush-theme-change' on window, detail: { theme }
  */
@@ -52,8 +59,11 @@
     ['Fonts', ['--font-text', '--font-heading', '--font-hero']],
     ['Hero', ['--hero-overlay']],
   ]
-  const DERIVED_ALL = DERIVED.flatMap(([, list]) => list)
-  const TOKEN = /^--(color|font|radius|hero)-/
+  const CONFIG = window.BlushThemeEditorConfig || {}
+  const PROJECT = CONFIG.groups || []
+  const DERIVED_ALL = [...DERIVED, ...PROJECT].flatMap(([, list]) => list)
+  const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const TOKEN = new RegExp(`^(--(color|font|radius|hero)-${(CONFIG.tokens || []).map((p) => `|${escapeRe(p)}`).join('')})`)
   const THEME_SEL = /\[data-theme\s*=\s*["']?([\w-]+)["']?\s*\]/g
   const STACKS = [
     "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
@@ -380,6 +390,14 @@
         el('h3', { textContent: 'Derived (overridable)' }),
         el('p', { className: 'note', textContent: 'Computed from the core tokens unless the theme sets them. Edit to override, ↺ to go back.' }),
         ...derived.map(([title, list, open]) => group(title, list, open)))
+    }
+    const project = PROJECT
+      .map(([title, list, open]) => [title, list.filter((t) => tokens.includes(t)), open])
+      .filter(([, list]) => list.length)
+    if (project.length) {
+      kids.push(
+        el('h3', { textContent: CONFIG.groupsTitle || 'Project' }),
+        ...project.map(([title, list, open]) => group(title, list, open)))
     }
     if (rest.length) {
       const colors = rest.filter(isColor), others = rest.filter((t) => !isColor(t))
