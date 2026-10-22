@@ -21,9 +21,12 @@
  *     Cross-origin stylesheets cannot be read and are skipped.
  *   - Reads the editable tokens from the same rules (--color-*, --font-*,
  *     --radius-*, --hero-*); the eight Blush public tokens go first, then the
- *     checkbox / radio / switch group (--color-choice*).
+ *     derived tokens in groups (surface, fields, choices, range, fonts, hero).
+ *   - Each derived row says where its value comes from: `formula` (default in
+ *     derived.css), `theme` (set by the theme) or `edited` (your override).
  *   - Remembers the chosen theme and your edits (per theme) in localStorage.
- *   - Exports the current theme as CSS (copy or download).
+ *   - Exports the current theme as CSS (copy or download): public tokens,
+ *     whatever the theme sets itself, and your edits.
  *
  * Page API: window.BlushThemeEditor { themes(), set(name), open(), close() }
  * Event:    'blush-theme-change' on window, detail: { theme }
@@ -39,7 +42,17 @@
     '--color-accent', '--color-surface', '--color-text', '--color-contrast',
     '--color-invalid', '--color-valid', '--color-warning', '--radius-control',
   ]
-  const CHOICES = ['--color-choice', '--color-choice-check', '--color-choice-border-hover']
+  // Derived tokens (formulas in src/theme/derived.css), grouped as in themes.css.
+  const DERIVED = [
+    ['Surface and text', ['--color-muted', '--color-border', '--color-surface-soft', '--color-accent-soft', '--color-heading']],
+    ['Fields', ['--color-field', '--color-field-hover', '--color-field-border', '--color-field-border-hover',
+      '--color-focus-ring', '--color-valid-ring', '--color-invalid-ring']],
+    ['Checkbox, radio, switch', ['--color-choice', '--color-choice-check', '--color-choice-border-hover'], true],
+    ['Range', ['--color-range-track', '--color-range-track-hover', '--color-range-track-active', '--color-range-glow']],
+    ['Fonts', ['--font-text', '--font-heading', '--font-hero']],
+    ['Hero', ['--hero-overlay']],
+  ]
+  const DERIVED_ALL = DERIVED.flatMap(([, list]) => list)
   const TOKEN = /^--(color|font|radius|hero)-/
   const THEME_SEL = /\[data-theme\s*=\s*["']?([\w-]+)["']?\s*\]/g
   const STACKS = [
@@ -81,25 +94,39 @@
   /* ---------- discovery: themes and tokens defined in the stylesheets */
   let themes = []
   let tokens = []
+  let declared = new Map() // theme name -> tokens that theme sets itself
   function scan() {
-    const t = new Set(), k = new Set()
-    const walk = (rules) => {
+    const t = new Set(), k = new Set(), d = new Map()
+    // `ctx` is the enclosing theme / :root rule: once a nested @supports rule
+    // appears, the declarations that follow it are CSSNestedDeclarations (no
+    // selectorText) and still belong to that rule.
+    const take = (r, ctx) => {
+      for (const p of r.style) {
+        if (!TOKEN.test(p)) continue
+        k.add(p)
+        for (const n of ctx.names) (d.get(n) || d.set(n, new Set()).get(n)).add(p)
+      }
+    }
+    const walk = (rules, ctx) => {
       for (const r of rules) {
+        let next = ctx
         if (r.selectorText) {
           const names = [...r.selectorText.matchAll(THEME_SEL)].map((m) => m[1])
           names.forEach((n) => t.add(n))
-          if (names.length || /:root|\[data-theme\s*\]/.test(r.selectorText)) {
-            for (const p of r.style) if (TOKEN.test(p)) k.add(p)
-          }
+          next = names.length || /:root|\[data-theme\s*\]/.test(r.selectorText) ? { names } : null
+          if (next) take(r, next)
+        } else if (ctx && r.style) {
+          take(r, ctx)
         }
-        if (r.cssRules) walk(r.cssRules) // @layer, @media, @supports, nesting
+        if (r.cssRules) walk(r.cssRules, next) // @layer, @media, @supports, nesting
       }
     }
     for (const sheet of document.styleSheets) {
-      try { walk(sheet.cssRules) } catch { /* cross-origin sheet */ }
+      try { walk(sheet.cssRules, null) } catch { /* cross-origin sheet */ }
     }
     if (!t.size) document.querySelectorAll('[data-theme]').forEach((e) => t.add(e.dataset.theme))
     themes = [...t]
+    declared = d
     const rest = [...k].filter((v) => !PUBLIC.includes(v)).sort()
     tokens = [...PUBLIC.filter((v) => k.has(v) || !k.size), ...rest]
   }
@@ -178,11 +205,14 @@
     save()
   }
   const overridden = (name) => name in (state.overrides[theme()] || {})
+  const byTheme = (name) => !!declared.get(theme())?.has(name)
+  /** Where a derived token's value comes from: your edit, the theme, or the default formula. */
+  const origin = (name) => (overridden(name) ? 'edited' : byTheme(name) ? 'theme' : 'formula')
 
   function exportCss() {
     const cs = getComputedStyle(root)
     const lines = tokens
-      .filter((v) => PUBLIC.includes(v) || overridden(v))
+      .filter((v) => PUBLIC.includes(v) || byTheme(v) || overridden(v))
       .map((v) => `    ${v}: ${cs.getPropertyValue(v).trim()};`)
     return `/* Blush theme "${theme()}", exported by blush-theme-editor */\n@layer theme {\n  [data-theme="${theme()}"] {\n${lines.join('\n')}\n  }\n}\n`
   }
@@ -239,7 +269,7 @@
   function row(name) {
     const color = isColor(name)
     const text = el('input', { type: 'text', spellcheck: false, ariaLabel: name })
-    const x = el('button', { className: 'x', type: 'button', title: 'Back to the stylesheet value', textContent: '↺' })
+    const x = el('button', { className: 'x', type: 'button', title: DERIVED_ALL.includes(name) ? 'Back to the formula / theme value' : 'Back to the stylesheet value', textContent: '↺' })
     const picker = color ? el('input', { type: 'color', ariaLabel: `${name} picker` }) : null
     if (name.startsWith('--font-')) text.setAttribute('list', 'be-stacks')
     const mark = el('i', { textContent: '' })
@@ -300,7 +330,7 @@
     for (const [name, r] of rows) {
       const ov = overridden(name)
       r.wrap.classList.toggle('ov', ov)
-      r.mark.textContent = ov ? 'edited' : ''
+      r.mark.textContent = DERIVED_ALL.includes(name) ? origin(name) : ov ? 'edited' : ''
       if (name === skip) continue
       r.text.value = cs.getPropertyValue(name).trim()
       if (r.picker) r.picker.value = colors.get(name).hex
@@ -333,22 +363,27 @@
     })
 
     const core = tokens.filter((t) => PUBLIC.includes(t))
-    const choices = tokens.filter((t) => CHOICES.includes(t))
-    const rest = tokens.filter((t) => !PUBLIC.includes(t) && !CHOICES.includes(t))
-    const group = (title, list) => {
-      const d = el('details', {}, el('summary', { textContent: `${title} (${list.length})` }), ...list.map(row))
-      return d
-    }
+    const rest = tokens.filter((t) => !PUBLIC.includes(t) && !DERIVED_ALL.includes(t))
+    const group = (title, list, open = false) =>
+      el('details', { open }, el('summary', { textContent: `${title} (${list.length})` }), ...list.map(row))
     const kids = [
       el('div', {}, el('h3', { textContent: 'Theme' }), sel),
       bar,
       el('p', { className: 'note', textContent: `${themes.length} themes read from the stylesheets. Edits are kept per theme in this browser.` }),
       el('h3', { textContent: 'Core tokens' }), ...core.map(row),
     ]
-    if (choices.length) kids.push(el('h3', { textContent: 'Checkbox, radio, switch' }), ...choices.map(row))
+    const derived = DERIVED
+      .map(([title, list, open]) => [title, list.filter((t) => tokens.includes(t)), open])
+      .filter(([, list]) => list.length)
+    if (derived.length) {
+      kids.push(
+        el('h3', { textContent: 'Derived (overridable)' }),
+        el('p', { className: 'note', textContent: 'Computed from the core tokens unless the theme sets them. Edit to override, ↺ to go back.' }),
+        ...derived.map(([title, list, open]) => group(title, list, open)))
+    }
     if (rest.length) {
       const colors = rest.filter(isColor), others = rest.filter((t) => !isColor(t))
-      kids.push(el('h3', { textContent: 'Derived and other' }))
+      kids.push(el('h3', { textContent: 'Other' }))
       if (colors.length) kids.push(group('Colors', colors))
       if (others.length) kids.push(group('Fonts, radius, hero', others))
     }
